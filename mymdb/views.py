@@ -4,6 +4,7 @@ from django.views.generic import View
 from bs4 import BeautifulSoup
 from imdb import IMDb
 import requests
+import string
 
 
 class IndexView(TemplateView):
@@ -38,10 +39,12 @@ class MovieView(View):
                     imdb_data = MovieView.ia.search_movie(title, results=1)[0]
                     src = requests.get('http://www.imdb.com/title/tt' + imdb_data.movieID + '/').text
                     bs = BeautifulSoup(src)
-                    recs = [rec['data-tconst'][2:] for rec in bs.findAll('div', 'rec_item')]
+                    titles = [rec.a.b.string for rec in bs.findAll('div', 'rec-title')]
+                    genres = [string.strip(rec.span.next_sibling) for rec in bs.findAll('div', 'rec-cert-genre')]
+                    print genres
                     res = {}
-                    for i, rec in enumerate(recs):
-                        res[i] = rec
+                    for i, (title, genre) in enumerate(zip(titles, genres)):
+                        res[i] = title, genre
                     return JsonResponse(res)
                 else:
                     return JsonResponse({'err': 'bad url'})

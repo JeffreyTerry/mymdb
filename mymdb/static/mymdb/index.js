@@ -100,6 +100,8 @@ function get_movie(title) {
             .call(force.drag)
         node.append("circle").attr("r", standardRadius)
 
+        link = svg.selectAll(".link");
+
         // get neighbors
         $.get('/movies/title/' + title + '/recommendations', function (data) {
             console.log(data);
