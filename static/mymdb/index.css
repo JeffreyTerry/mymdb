@@ -1,3 +1,13 @@
-body {
-    background-color: red;
+.node {
+    stroke: #fff;
+    stroke-width: 1.5px;
+}
+
+.node circle {
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+
+.link {
+    stroke: #666;
 }
