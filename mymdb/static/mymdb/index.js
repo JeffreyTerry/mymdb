@@ -101,10 +101,10 @@ var node_seen = new Set();
 function myGraph(el) {
 
     // Add and remove elements on the graph object
-    this.addNode = function (title, genre) {
+    this.addNode = function (title, genre, rating) {
         if (!node_seen.has(title)) {
-            nodes.push({"title":title,"genre":genre});
-            update();   
+            nodes.push({"title":title,"genre":genre, "rating": rating});
+            update();
             node_seen.add(title)
         }
     }
@@ -158,7 +158,7 @@ function myGraph(el) {
 
     var force = d3.layout.force()
         .gravity(.2)
-        .distance(150)
+        .distance(30)
         .charge(-2000)
         .size([width, height]);
 
@@ -178,21 +178,25 @@ function myGraph(el) {
         var node = vis.selectAll("g.node")
             .data(nodes, function(d) { return d.title;});
 
+
         var nodeEnter = node.enter().append("g")
             .attr("class", "node")
             .style("fill", function (d) {
                 var col = genre_to_color(d.genre)
-                return col;
+                return color(col);
             })
             .on("mouseover", mouseover)
             .on("mouseout", mouseout)
             .call(force.drag);
 
         nodeEnter.append("circle")
-            .attr("r", standardRadius);
+            .attr("r", function (d) {
+                return d.rating * standardRadius
+            })
+            
 
         nodeEnter.append("text")
-            .attr("dx", 12)
+            .attr("dx", 23)
             .attr("dy", ".35em")
             .text(function (d) {return d.title})
 
@@ -220,13 +224,22 @@ graph = new myGraph("#graph");
 
 function get_movie(title) {
     $.get('/movies/title/' + title, function (data) {
-        graph.addNode(data.title, data.genres[0]);
+        graph.addNode(data.title, data.genres[0], 1);
         var parentTitle = data.title;
+
+        $.get('/movies/title/' + parentTitle, function (data) {
+                $("#sb-title").text(data.title);
+                $("#sb-director").text("By: " + data.director);
+                $("#sb-metacritic-rating").text("Metacritic: " + data.metascore);
+                $("#sb-imdb-rating").text("IMDb: " + data.rating);
+                $("#sb-plot").text(data.plot);
+                $("#sb-photo").html('<img src="' + data.cover_url + '"></div>');
+        });
 
         $.get('/movies/title/' + title + '/recommendations', function (data) {
             for (var key in data) {
                 if (data.hasOwnProperty(key)) {
-                    graph.addNode(data[key][0], data[key][1]);
+                    graph.addNode(data[key][0], data[key][1], 1);
                     graph.addLink(parentTitle, data[key][0]);
                 }
             }
@@ -235,6 +248,14 @@ function get_movie(title) {
                 console.log("hi");
                 var title = $(event.target).next().text()
                 switch_movie(title)
+                $.get('/movies/title/' + title, function (data) {
+                    $("#sb-title").text(data.title);
+                    $("#sb-director").text("By: " + data.director);
+                    $("#sb-metacritic-rating").text("Metacritic: " + data.metascore);
+                    $("#sb-imdb-rating").text("IMDb: " + data.rating);
+                    $("#sb-plot").text(data.plot);
+                    $("#sb-photo").html('<img src="' + data.cover_url + '"></div>');
+                });
             });
         });        
     });
@@ -246,7 +267,7 @@ function switch_movie(title) {
     $.get('/movies/title/' + title + '/recommendations', function (data) {
         for (var key in data) {
             if (data.hasOwnProperty(key)) {
-                graph.addNode(data[key][0], data[key][1]);
+                graph.addNode(data[key][0], data[key][1], 1);
                 graph.addLink(title, data[key][0]);
             }
         }
@@ -255,37 +276,14 @@ function switch_movie(title) {
             console.log("hi");
             var title = $(event.target).next().text()
             switch_movie(title)
+            $.get('/movies/title/' + title, function (data) {
+                $("#sb-title").text(data.title);
+                $("#sb-director").text("By: " + data.director);
+                $("#sb-metacritic-rating").text("Metacritic: " + data.metascore);
+                $("#sb-imdb-rating").text("IMDb: " + data.rating);
+                $("#sb-plot").text(data.plot);
+                $("#sb-photo").html('<img src="' + data.cover_url + '"></div>');
+            });
         });
     });        
 }
-
-
-// //Creates the graph data structure out of the json data
-// force.nodes(graph.nodes)
-//     .links(graph.links)
-//     .start();
-
-
-// //Create all the line svgs but without locations yet
-// var link = svg.selectAll(".link")
-//     .data(graph.links)
-//     .enter().append("line")
-//     .attr("class", "link")
-//     .attr("stroke-width", 2)
-//     .attr("stroke", "black")
-
-
-// //Do the same with the circles for the nodes - no 
-// var node = svg.selectAll(".node")
-//     .data(graph.nodes)
-//     .enter().append("g")
-//     .attr("class", "node")
-//     .style("fill", function (d) {
-//         return color(d.group);
-//     })
-//     .on("mouseover", mouseover)
-//     .on("mouseout", mouseout)
-//     .call(force.drag)
-
-// node.append("circle").attr("r", standardRadius)
-

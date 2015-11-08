@@ -43,6 +43,8 @@ body {
     right: 0px;
     position: absolute;
     padding-top: 80px;
+    padding-right: 50px;
+    padding-left: 40px;
 }
 
 #sb-title {
@@ -107,7 +109,7 @@ body {
 }
 
 .node circle {
-  stroke: #fff;
+  /*stroke: #fff;*/
   stroke-width: 1.5px;
   cursor: pointer;
 }
@@ -117,6 +119,7 @@ body {
 }
 
 text {
+    cursor: pointer;
     stroke: #0879C2;
     font-family: "Lucida Grande", "Droid Sans", Arial, Helvetica, sans-serif;
     font-weight: normal;
