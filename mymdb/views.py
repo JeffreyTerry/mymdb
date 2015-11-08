@@ -42,6 +42,7 @@ class MovieView(View):
                     titles = [rec.a.b.string for rec in bs.findAll('div', 'rec-title')]
                     genres = [string.strip(rec.span.next_sibling) for rec in bs.findAll('div', 'rec-cert-genre')]
                     rating = [string.strip(rec.string) for rec in bs.findAll('div', 'star-box-giga-star')]
+                    rating = [rating] * len(titles)
                     res = {}
                     for i, (title, genre, rating) in enumerate(zip(titles, genres, rating)):
                         res[i] = title, genre, rating
