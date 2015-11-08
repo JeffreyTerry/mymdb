@@ -1,5 +1,3 @@
-console.log(graph)
-
 var standardRadius = 20;
 
 function mouseover() {
@@ -15,8 +13,8 @@ function mouseout() {
 }
 
 //Constants for the SVG
-var width = window.innerWidth - 40,
-    height = window.innerHeight - 40;
+var width = window.innerWidth * 0.7,
+    height = window.innerHeight;
 
 //Set up the colour scale
 var color = d3.scale.category20();
