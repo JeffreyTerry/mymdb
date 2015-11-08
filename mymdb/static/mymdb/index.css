@@ -20,13 +20,11 @@ body {
 }
 
 #br-title {
-    font-family: 'kenyancoffee';
+    font-family: 'Play', sans-serif;
     font-size: 32px;
     color: white;
     position: absolute;
-    top: 2px;
-    left: calc(50% - 43px);
-    letter-spacing: 5px;
+    left: calc(50% - 55px);
 }
 
 #graph {
