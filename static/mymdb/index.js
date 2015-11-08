@@ -1,28 +1,28 @@
-console.log(graph)
+var standardRadius = 20;
 
 function mouseover() {
   d3.select(this).select("circle").transition()
       .duration(250)
-      .attr("r", 16);
+      .attr("r", standardRadius * 1.5);
 }
 
 function mouseout() {
   d3.select(this).select("circle").transition()
       .duration(250)
-      .attr("r", 8);
+      .attr("r", standardRadius);
 }
 
 //Constants for the SVG
-var width = 500,
-    height = 500;
+var width = window.innerWidth * 0.7,
+    height = window.innerHeight;
 
 //Set up the colour scale
 var color = d3.scale.category20();
 
 //Set up the force layout
 var force = d3.layout.force()
-    .charge(-120)
-    .linkDistance(30)
+    .charge(-400)
+    .linkDistance(standardRadius * 4)
     .size([width, height]);
 
 //Append a SVG to the body of the html page. Assign this SVG as an object to svg
@@ -57,7 +57,7 @@ var node = svg.selectAll(".node")
     .on("mouseout", mouseout)
     .call(force.drag)
 
-node.append("circle").attr("r", 8)
+node.append("circle").attr("r", standardRadius)
 
 
 //Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
