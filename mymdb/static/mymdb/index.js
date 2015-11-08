@@ -103,7 +103,7 @@ function myGraph(el) {
     // Add and remove elements on the graph object
     this.addNode = function (title, genre, rating) {
         if (!node_seen.has(title)) {
-            nodes.push({"title":title,"genre":genre}, "rating": rating);
+            nodes.push({"title":title,"genre":genre, "rating": rating});
             update();
             node_seen.add(title)
         }
@@ -190,7 +190,9 @@ function myGraph(el) {
             .call(force.drag);
 
         nodeEnter.append("circle")
-            .attr("r", standardRadius)
+            .attr("r", function (d) {
+                return standardRadius * 1 * Math.max(parseInt(d.rating) - 7, 0.8);
+            })
             
 
         nodeEnter.append("text")
