@@ -19,6 +19,7 @@ def getMovieData(imdb_data):
     res['rating'] = imdb_data['rating']
     res['metascore'] = imdb_data['metascore']
     res['plot'] = imdb_data['plot']
+    res['cover_url'] = imdb_data['cover url']
     return JsonResponse(res)
 
 class MovieView(View):
