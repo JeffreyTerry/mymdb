@@ -1,3 +1,28 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+#graph {
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+}
+
+#sidebar {
+    width: 30%;
+    top: 0px;
+    bottom: 0px;
+    right: 0px;
+    position: absolute;
+}
+
+#initial-input-box {
+    position: absolute;
+    width: 90%;
+    top: calc(50% - 17px);
+}
+
 .node {
     stroke: #fff;
     stroke-width: 1.5px;

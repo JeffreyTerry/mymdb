@@ -1,24 +1,23 @@
-
 // constants
 var standardRadius = 20;
 
     
 var input;
-function key_up (e) {
-   // listen for the ENTER key 
-    if (e.keyCode == 13) {  
-        input = document.getElementById("initial-input-box").value;   
+$("#initial-input-box").keyup(function (event) {
+    console.log(event);
+    if (event.keyCode == 13) {
+        input = document.getElementById("initial-input-box").value;
         get_movie(input);
-        document.getElementById("input_id").value = "";
     }
-}
+});
+
 
 function get_movie(title) {
     // get the data
     // parse the data
     // build the graph
-
 }
+
 
 function mouseover() {
   d3.select(this).select("circle").transition()
@@ -33,8 +32,8 @@ function mouseout() {
 }
 
 //Constants for the SVG
-var width = window.innerWidth - 40,
-    height = window.innerHeight - 40;
+var width = window.innerWidth * 0.7,
+    height = window.innerHeight;
 
 //Set up the colour scale
 var color = d3.scale.category20();
