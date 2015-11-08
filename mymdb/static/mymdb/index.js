@@ -4,17 +4,18 @@ var standardRadius = 20;
     
 var input;
 $("#initial-input-box").keyup(function (event) {
-    console.log(event);
     if (event.keyCode == 13) {
         input = document.getElementById("initial-input-box").value;
         get_movie(input);
+        // TODO move this so that we don't delete the input box if the imdb search fails
+        document.getElementById("initial-input-box").remove(document.getElementById("initial-input-box"));
     }
 });
 
 
 function get_movie(title) {
     $.get('/movies/title/' + title + '/recommendations', function(data) {
-        
+
     });
     // get the data
     // parse the data
@@ -25,7 +26,7 @@ function get_movie(title) {
 function mouseover() {
   d3.select(this).select("circle").transition()
       .duration(250)
-      .attr("r", standardRadius * 1.5);
+      .attr("r", standardRadius * 1.3);
 }
 
 function mouseout() {
