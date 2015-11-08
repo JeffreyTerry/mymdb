@@ -10,6 +10,7 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 var player;
 function onYouTubeIframeAPIReady() {
   player = new YT.Player('sb-trailer', {
+    height: document.getElementById('sidebar').offsetWidth / 16 * 9,
     width: document.getElementById('sidebar').offsetWidth,
     videoId: 'M7lc1UVf-VE',
     events: {
