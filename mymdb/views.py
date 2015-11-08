@@ -41,10 +41,10 @@ class MovieView(View):
                     bs = BeautifulSoup(src)
                     titles = [rec.a.b.string for rec in bs.findAll('div', 'rec-title')]
                     genres = [string.strip(rec.span.next_sibling) for rec in bs.findAll('div', 'rec-cert-genre')]
-                    print genres
+                    rating = [string.strip(rec.string) for rec in bs.findAll('div', 'star-box-giga-star')]
                     res = {}
-                    for i, (title, genre) in enumerate(zip(titles, genres)):
-                        res[i] = title, genre
+                    for i, (title, genre, rating) in enumerate(zip(titles, genres, rating)):
+                        res[i] = title, genre, rating
                     return JsonResponse(res)
                 else:
                     return JsonResponse({'err': 'bad url'})
