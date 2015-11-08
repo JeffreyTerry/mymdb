@@ -23,6 +23,11 @@ body {
     top: calc(50% - 17px);
 }
 
+#sb-trailer {
+    position: absolute;
+    bottom: 0px;
+}
+
 .node {
     stroke: #fff;
     stroke-width: 1.5px;
