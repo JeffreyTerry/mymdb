@@ -6,7 +6,7 @@ var height = window.innerHeight;
 
 //Set up the colour scale
 var color = d3.scale.category20();
-
+    
 //Append a SVG to the body of the html page. Assign this SVG as an object to svg
 var svg = d3.select("#graph").append("svg")
     .attr("width", width)
@@ -38,7 +38,7 @@ force.on("tick", function () {
     })
         .attr("cy", function (d) {
         return d.y;
-    });
+    })
 
     node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
 });
@@ -47,7 +47,7 @@ force.on("tick", function () {
 function mouseover() {
   d3.select(this).select("circle").transition()
       .duration(250)
-      .attr("r", standardRadius * 1.5);
+      .attr("r", standardRadius * 1.3);
 }
 
 function mouseout() {
@@ -64,9 +64,10 @@ $("#initial-input-box").keyup(function (event) {
     if (event.keyCode == 13) {
         input = document.getElementById("initial-input-box").value;
         get_movie(input);
+        // TODO move this so that we don't delete the input box if the imdb search fails
+        document.getElementById("initial-input-box").remove(document.getElementById("initial-input-box"));
     }
 });
-
 
 nodes = []
 links = []
@@ -102,11 +103,28 @@ function get_movie(title) {
         // get neighbors
         $.get('/movies/title/' + title + '/recommendations', function (data) {
             console.log(data);
-            
+
+            neighbor = {}
+            for (var key in data) {
+                if (data.hasOwnProperty(key)) {
+                    neighbor.name = "nice";
+                    neighbor.genre = "nice";
+                    nodes.push(neighbor);
+                }
+            }
+
+            node = node.data(nodes, function (d) {d.name, d.genre});
+            node.enter().append("g")
+                .attr("class", "node")
+                .style("fill", function (d) {
+                    return 1;
+                })
+                .on("mouseover", mouseover)
+                .on("mouseout", mouseout)
+                .call(force.drag)
+            node.append("circle").attr("r", standardRadius)
+            node.exit().remove();
         });        
-
-
-
     });
 
     // get the data
