@@ -5,43 +5,7 @@ var width = window.innerWidth * 0.7;
 var height = window.innerHeight;
 
 //Set up the colour scale
-// var color = d3.scale.category20();
-    
-// //Append a SVG to the body of the html page. Assign this SVG as an object to svg
-// var svg = d3.select("#graph").append("svg")
-//     .attr("width", width)
-//     .attr("height", height);
-
-// //Set up the force layout
-// var force = d3.layout.force()
-//     .charge(-40)
-//     .linkDistance(standardRadius * 4)
-//     .size([width, height]);
-
-// //Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
-// force.on("tick", function () {
-//     // link.attr("x1", function (d) {
-//     //     return d.source.x;
-//     // })
-//     //     .attr("y1", function (d) {
-//     //     return d.source.y;
-//     // })
-//     //     .attr("x2", function (d) {
-//     //     return d.target.x;
-//     // })
-//     //     .attr("y2", function (d) {
-//     //     return d.target.y;
-//     // });
-
-//     node.attr("cx", function (d) {
-//         return d.x;
-//     })
-//         .attr("cy", function (d) {
-//         return d.y;
-//     })
-
-//     node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
-// });
+var color = d3.scale.category20();
 
 
 function mouseover() {
@@ -56,6 +20,69 @@ function mouseout() {
       .attr("r", standardRadius);
 }
 
+function genre_to_color(genre) {
+    if (genre == "Action") {
+        return 0;
+    }
+    if (genre == "Animation") {
+        return 1;
+    }
+    if (genre == "Comedy") {
+        return 2;
+    }
+    if (genre == "Documentary") {
+        return 3;
+    }
+    if (genre == "Family") {
+        return 4;
+    }
+    if (genre == "Horror") {
+        return 6;
+    }
+    if (genre == "Musical") {
+        return 7;
+    }
+    if (genre == "Romance") {
+        return 8;
+    }
+    if (genre == "Sport") {
+        return 9;
+    }
+    if (genre == "War") {
+        return 10;
+    }
+    if (genre == "Adventure") {
+        return 11;
+    }
+    if (genre == "Crime") {
+        return 13;
+    }
+    if (genre == "Drama") {
+        return 14;
+    }
+    if (genre == "Fantasy") {
+        return 15;
+    }
+    if (genre == "History") {
+        return 16;
+    }
+    if (genre == "Music") {
+        return 17;
+    }
+    if (genre == "Mystery") {
+        return 18;
+    }
+    if (genre == "Sci-Fi") {
+        return 19;
+    }
+    if (genre == "Thriller") {
+        return 12;
+    }
+    if (genre == "Western") {
+        return 5;
+    }
+}
+
 // ------------------------------------------------------------------- start logic
 
 var input;
@@ -67,6 +94,8 @@ $("#initial-input-box").keyup(function (event) {
         document.getElementById("initial-input-box").remove(document.getElementById("initial-input-box"));
     }
 });
+
+var seen = new Set();
 
 function myGraph(el) {
 
@@ -95,8 +124,12 @@ function myGraph(el) {
         var targetNode = findNode(targetTitle);
 
         if((sourceNode !== undefined) && (targetNode !== undefined)) {
-            links.push({"source": sourceNode, "target": targetNode});
-            update();
+
+            if (!seen.has(targetNode)) {
+                links.push({"source": sourceNode, "target": targetNode});
+                edges.add(targetNode.title);
+                update();
+            }
         }
     }
 
@@ -120,9 +153,9 @@ function myGraph(el) {
         .attr("height", height);
 
     var force = d3.layout.force()
-        .gravity(.05)
-        .distance(100)
-        .charge(-400)
+        .gravity(.2)
+        .distance(150)
+        .charge(-2000)
         .size([width, height]);
 
     var nodes = force.nodes(),
@@ -143,23 +176,21 @@ function myGraph(el) {
 
         var nodeEnter = node.enter().append("g")
             .attr("class", "node")
+            .style("fill", function (d) {
+                var col = genre_to_color(d.genre)
+                return col;
+            })
+            .on("mouseover", mouseover)
+            .on("mouseout", mouseout)
             .call(force.drag);
 
         nodeEnter.append("circle")
             .attr("r", standardRadius);
 
-        // nodeEnter.append("image")
-        //     .attr("class", "circle")
-        //     .attr("xlink:href", "https://d3nwyuy0nl342s.cloudfront.net/images/icons/public.png")
-        //     .attr("x", "-8px")
-        //     .attr("y", "-8px")
-        //     .attr("width", "16px")
-        //     .attr("height", "16px");
-
         nodeEnter.append("text")
-            .attr("class", "nodetext")
             .attr("dx", 12)
-            .attr("dy", ".35em");
+            .attr("dy", ".35em")
+            .text(function (d) {return d.title})
 
         node.exit().remove();
 
@@ -182,27 +213,12 @@ function myGraph(el) {
 
 graph = new myGraph("#graph");
 
-// // You can do this from the console as much as you like...
-// graph.addNode("Cause");
-// graph.addNode("Effect");
-// graph.addLink("Cause", "Effect");
-// graph.addNode("A");
-// graph.addNode("B");
-// graph.addLink("A", "B");
-// graph.addLink("B", "Cause");
-
-// graph.addNode("title", "genre");
-// graph.addNode("title2", "genre2");
-// graph.addNode("title3", "genre3");
-// graph.addLink("title", "title2");
-// graph.addLink("title2", "title3");
 
 function get_movie(title) {
     $.get('/movies/title/' + title, function (data) {
         graph.addNode(data.title, data.genres[0]);
         var parentTitle = data.title;
 
-        // get neighbors
         $.get('/movies/title/' + title + '/recommendations', function (data) {
             for (var key in data) {
                 if (data.hasOwnProperty(key)) {
@@ -210,13 +226,33 @@ function get_movie(title) {
                     graph.addLink(parentTitle, data[key][0]);
                 }
             }
-            console.log(data);
+            $("circle").unbind("click");
+            $("circle").click(function (event) {
+                console.log("hi");
+                var title = $(event.target).next().text()
+                switch_movie(title)
+            });
         });        
     });
+}
 
-    // get the data
-    // parse the data
-    // build the graph
+
+
+function switch_movie(title) {
+    $.get('/movies/title/' + title + '/recommendations', function (data) {
+        for (var key in data) {
+            if (data.hasOwnProperty(key)) {
+                graph.addNode(data[key][0], data[key][1]);
+                graph.addLink(title, data[key][0]);
+            }
+        }
+        $("circle").unbind("click");
+        $("circle").click(function (event) {
+            console.log("hi");
+            var title = $(event.target).next().text()
+            switch_movie(title)
+        });
+    });        
 }
 
 

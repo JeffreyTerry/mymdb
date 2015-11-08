@@ -36,8 +36,17 @@ body {
 .node circle {
   stroke: #fff;
   stroke-width: 1.5px;
+  cursor: pointer;
 }
 
 .link {
     stroke: #666;
+}
+
+text {
+    stroke: #0879C2;
+    font-family: "Lucida Grande", "Droid Sans", Arial, Helvetica, sans-serif;
+    font-weight: normal;
+    stroke-width: .5;
+    font-size: 14px;
 }
