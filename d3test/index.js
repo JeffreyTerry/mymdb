@@ -1,5 +1,17 @@
 console.log(graph)
 
+function mouseover() {
+  d3.select(this).select("circle").transition()
+      .duration(250)
+      .attr("r", 16);
+}
+
+function mouseout() {
+  d3.select(this).select("circle").transition()
+      .duration(250)
+      .attr("r", 8);
+}
+
 //Constants for the SVG
 var width = 500,
     height = 500;
@@ -29,19 +41,23 @@ var link = svg.selectAll(".link")
     .data(graph.links)
     .enter().append("line")
     .attr("class", "link")
-    .style("stroke-width", "10px")
+    .attr("stroke-width", 2)
+    .attr("stroke", "black")
 
 
 //Do the same with the circles for the nodes - no 
 var node = svg.selectAll(".node")
     .data(graph.nodes)
-    .enter().append("circle")
+    .enter().append("g")
     .attr("class", "node")
-    .attr("r", 8)
     .style("fill", function (d) {
-    return color(d.group);
-})
-    .call(force.drag);
+        return color(d.group);
+    })
+    .on("mouseover", mouseover)
+    .on("mouseout", mouseout)
+    .call(force.drag)
+
+node.append("circle").attr("r", 8)
 
 
 //Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
@@ -65,4 +81,6 @@ force.on("tick", function () {
         .attr("cy", function (d) {
         return d.y;
     });
+
+    node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
 });
