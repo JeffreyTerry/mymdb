@@ -5,43 +5,43 @@ var width = window.innerWidth * 0.7;
 var height = window.innerHeight;
 
 //Set up the colour scale
-var color = d3.scale.category20();
+// var color = d3.scale.category20();
     
-//Append a SVG to the body of the html page. Assign this SVG as an object to svg
-var svg = d3.select("#graph").append("svg")
-    .attr("width", width)
-    .attr("height", height);
+// //Append a SVG to the body of the html page. Assign this SVG as an object to svg
+// var svg = d3.select("#graph").append("svg")
+//     .attr("width", width)
+//     .attr("height", height);
 
-//Set up the force layout
-var force = d3.layout.force()
-    .charge(-400)
-    .linkDistance(standardRadius * 4)
-    .size([width, height]);
+// //Set up the force layout
+// var force = d3.layout.force()
+//     .charge(-40)
+//     .linkDistance(standardRadius * 4)
+//     .size([width, height]);
 
-//Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
-force.on("tick", function () {
-    // link.attr("x1", function (d) {
-    //     return d.source.x;
-    // })
-    //     .attr("y1", function (d) {
-    //     return d.source.y;
-    // })
-    //     .attr("x2", function (d) {
-    //     return d.target.x;
-    // })
-    //     .attr("y2", function (d) {
-    //     return d.target.y;
-    // });
+// //Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
+// force.on("tick", function () {
+//     // link.attr("x1", function (d) {
+//     //     return d.source.x;
+//     // })
+//     //     .attr("y1", function (d) {
+//     //     return d.source.y;
+//     // })
+//     //     .attr("x2", function (d) {
+//     //     return d.target.x;
+//     // })
+//     //     .attr("y2", function (d) {
+//     //     return d.target.y;
+//     // });
 
-    node.attr("cx", function (d) {
-        return d.x;
-    })
-        .attr("cy", function (d) {
-        return d.y;
-    })
+//     node.attr("cx", function (d) {
+//         return d.x;
+//     })
+//         .attr("cy", function (d) {
+//         return d.y;
+//     })
 
-    node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
-});
+//     node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+// });
 
 
 function mouseover() {
@@ -68,69 +68,149 @@ $("#initial-input-box").keyup(function (event) {
     }
 });
 
+function myGraph(el) {
 
-nodes = []
-links = []
-var node;
-var link;
+    // Add and remove elements on the graph object
+    this.addNode = function (title, genre) {
+        nodes.push({"title":title,"genre":genre});
+        update();
+    }
 
+    this.removeNode = function (title) {
+        var i = 0;
+        var n = findNode(title);
+        while (i < links.length) {
+            if ((links[i]['source'] === n)||(links[i]['target'] == n)) links.splice(i,1);
+            else i++;
+        }
+        var index = findNodeIndex(title);
+        if(index !== undefined) {
+            nodes.splice(index, 1);
+            update();
+        }
+    }
+
+    this.addLink = function (sourceTitle, targetTitle) {
+        var sourceNode = findNode(sourceTitle);
+        var targetNode = findNode(targetTitle);
+
+        if((sourceNode !== undefined) && (targetNode !== undefined)) {
+            links.push({"source": sourceNode, "target": targetNode});
+            update();
+        }
+    }
+
+    var findNode = function (title) {
+        for (var i=0; i < nodes.length; i++) {
+            if (nodes[i].title === title)
+                return nodes[i]
+        };
+    }
+
+    var findNodeIndex = function (title) {
+        for (var i=0; i < nodes.length; i++) {
+            if (nodes[i].title === title)
+                return i
+        };
+    }
+
+    // set up the D3 visualisation in the specified element
+    var vis = this.vis = d3.select(el).append("svg:svg")
+        .attr("width", width)
+        .attr("height", height);
+
+    var force = d3.layout.force()
+        .gravity(.05)
+        .distance(100)
+        .charge(-400)
+        .size([width, height]);
+
+    var nodes = force.nodes(),
+        links = force.links();
+
+    var update = function () {
+
+        var link = vis.selectAll("line.link")
+            .data(links, function(d) { return d.source.title + "-" + d.target.title; });
+
+        link.enter().insert("line")
+            .attr("class", "link");
+
+        link.exit().remove();
+
+        var node = vis.selectAll("g.node")
+            .data(nodes, function(d) { return d.title;});
+
+        var nodeEnter = node.enter().append("g")
+            .attr("class", "node")
+            .call(force.drag);
+
+        nodeEnter.append("circle")
+            .attr("r", standardRadius);
+
+        // nodeEnter.append("image")
+        //     .attr("class", "circle")
+        //     .attr("xlink:href", "https://d3nwyuy0nl342s.cloudfront.net/images/icons/public.png")
+        //     .attr("x", "-8px")
+        //     .attr("y", "-8px")
+        //     .attr("width", "16px")
+        //     .attr("height", "16px");
+
+        nodeEnter.append("text")
+            .attr("class", "nodetext")
+            .attr("dx", 12)
+            .attr("dy", ".35em");
+
+        node.exit().remove();
+
+        force.on("tick", function() {
+          link.attr("x1", function(d) { return d.source.x; })
+              .attr("y1", function(d) { return d.source.y; })
+              .attr("x2", function(d) { return d.target.x; })
+              .attr("y2", function(d) { return d.target.y; });
+
+          node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+        });
+
+        // Restart the force layout.
+        force.start();
+    }
+
+    // Make it all go
+    update();
+}
+
+graph = new myGraph("#graph");
+
+// // You can do this from the console as much as you like...
+// graph.addNode("Cause");
+// graph.addNode("Effect");
+// graph.addLink("Cause", "Effect");
+// graph.addNode("A");
+// graph.addNode("B");
+// graph.addLink("A", "B");
+// graph.addLink("B", "Cause");
+
+// graph.addNode("title", "genre");
+// graph.addNode("title2", "genre2");
+// graph.addNode("title3", "genre3");
+// graph.addLink("title", "title2");
+// graph.addLink("title2", "title3");
 
 function get_movie(title) {
-
-    var initial = {};
     $.get('/movies/title/' + title, function (data) {
-
-        console.log(data);
-        initial.name = data.title
-        initial.genre = data.genres[0]
-        nodes.push(initial);
-
-        // initial node
-        force.nodes(nodes)
-            .links(links)
-            .start();
-
-        node = svg.selectAll(".node")
-            .data(nodes)
-            .enter().append("g")
-            .attr("class", "node")
-            .style("fill", function (d) {
-                return 1;
-            })
-            .on("mouseover", mouseover)
-            .on("mouseout", mouseout)
-            .call(force.drag)
-
-        node.append("circle").attr("r", standardRadius)
-        link = svg.selectAll(".link");
+        graph.addNode(data.title, data.genres[0]);
+        var parentTitle = data.title;
 
         // get neighbors
         $.get('/movies/title/' + title + '/recommendations', function (data) {
-            console.log(data);
-
-            neighbor = {}
             for (var key in data) {
                 if (data.hasOwnProperty(key)) {
-                    neighbor.name = "nice";
-                    neighbor.genre = "nice";
-                    nodes.push(neighbor);
+                    graph.addNode(data[key][0], data[key][1]);
+                    graph.addLink(parentTitle, data[key][0]);
                 }
             }
-
-            node = svg.selectAll(".node")
-                    .data(nodes)
-                    .enter().append("g")
-                    .attr("class", "node")
-                    .style("fill", function (d) {
-                        return 1;
-                    })
-                    .on("mouseover", mouseover)
-                    .on("mouseout", mouseout)
-                    .call(force.drag)
-
-            node.append("circle").attr("r", standardRadius)
-
-
+            console.log(data);
         });        
     });
 
