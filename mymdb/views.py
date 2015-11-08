@@ -18,8 +18,12 @@ def getMovieData(imdb_data):
     res['genres'] = imdb_data['genres']
     res['rating'] = imdb_data['rating']
     res['metascore'] = imdb_data['metascore']
-    res['plot'] = imdb_data['plot']
+    res['plot'] = imdb_data['plot outline']
     res['cover_url'] = imdb_data['cover url']
+    res['title'] = imdb_data['title']
+    res['runtimes'] = imdb_data['runtimes']
+    res['director'] = imdb_data['director'][0]['name']
+    # print imdb_data.keys()
     return JsonResponse(res)
 
 class MovieView(View):
