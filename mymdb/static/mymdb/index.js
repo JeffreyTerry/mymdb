@@ -1,6 +1,24 @@
-console.log(graph)
 
+// constants
 var standardRadius = 20;
+
+    
+var input;
+function key_up (e) {
+   // listen for the ENTER key 
+    if (e.keyCode == 13) {  
+        input = document.getElementById("initial-input-box").value;   
+        get_movie(input);
+        document.getElementById("input_id").value = "";
+    }
+}
+
+function get_movie(title) {
+    // get the data
+    // parse the data
+    // build the graph
+
+}
 
 function mouseover() {
   d3.select(this).select("circle").transition()
