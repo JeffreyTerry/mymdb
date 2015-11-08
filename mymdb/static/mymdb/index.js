@@ -13,6 +13,9 @@ $("#initial-input-box").keyup(function (event) {
 
 
 function get_movie(title) {
+    $.get('/movies/title/' + title + '/recommendations', function(data) {
+        
+    });
     // get the data
     // parse the data
     // build the graph
