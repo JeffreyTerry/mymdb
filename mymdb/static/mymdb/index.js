@@ -96,13 +96,17 @@ $("#initial-input-box").keyup(function (event) {
 });
 
 var seen = new Set();
+var node_seen = new Set();
 
 function myGraph(el) {
 
     // Add and remove elements on the graph object
     this.addNode = function (title, genre) {
-        nodes.push({"title":title,"genre":genre});
-        update();
+        if (!node_seen.has(title)) {
+            nodes.push({"title":title,"genre":genre});
+            update();   
+            node_seen.add(title)
+        }
     }
 
     this.removeNode = function (title) {
@@ -125,9 +129,9 @@ function myGraph(el) {
 
         if((sourceNode !== undefined) && (targetNode !== undefined)) {
 
-            if (!seen.has(targetNode)) {
+            if (!seen.has(targetNode.title)) {
                 links.push({"source": sourceNode, "target": targetNode});
-                edges.add(targetNode.title);
+                seen.add(targetNode.title);
                 update();
             }
         }
