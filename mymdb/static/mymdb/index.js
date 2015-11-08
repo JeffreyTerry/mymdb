@@ -56,7 +56,6 @@ function mouseout() {
       .attr("r", standardRadius);
 }
 
-
 // ------------------------------------------------------------------- start logic
 
 var input;
@@ -69,17 +68,20 @@ $("#initial-input-box").keyup(function (event) {
     }
 });
 
+
 nodes = []
 links = []
 var node;
 var link;
 
+
 function get_movie(title) {
 
     var initial = {};
     $.get('/movies/title/' + title, function (data) {
+
         console.log(data);
-        initial.name = data.name
+        initial.name = data.title
         initial.genre = data.genres[0]
         nodes.push(initial);
 
@@ -98,8 +100,8 @@ function get_movie(title) {
             .on("mouseover", mouseover)
             .on("mouseout", mouseout)
             .call(force.drag)
-        node.append("circle").attr("r", standardRadius)
 
+        node.append("circle").attr("r", standardRadius)
         link = svg.selectAll(".link");
 
         // get neighbors
@@ -115,17 +117,20 @@ function get_movie(title) {
                 }
             }
 
-            node = node.data(nodes, function (d) {d.name, d.genre});
-            node.enter().append("g")
-                .attr("class", "node")
-                .style("fill", function (d) {
-                    return 1;
-                })
-                .on("mouseover", mouseover)
-                .on("mouseout", mouseout)
-                .call(force.drag)
+            node = svg.selectAll(".node")
+                    .data(nodes)
+                    .enter().append("g")
+                    .attr("class", "node")
+                    .style("fill", function (d) {
+                        return 1;
+                    })
+                    .on("mouseover", mouseover)
+                    .on("mouseout", mouseout)
+                    .call(force.drag)
+
             node.append("circle").attr("r", standardRadius)
-            node.exit().remove();
+
+
         });        
     });
 
