@@ -3,15 +3,25 @@ body {
     padding: 0;
 }
 
-#graph {
+#banner {
+    position: absolute;
     top: 0px;
+    left: 0px;
+    right: 0px;
+    height: 40px;
+    background-color: #0879C2;
+}
+
+#graph {
+    position: absolute;
+    top: 40px;
     bottom: 0px;
     left: 0px;
 }
 
 #sidebar {
     width: 30%;
-    top: 0px;
+    top: 40px;
     bottom: 0px;
     right: 0px;
     position: absolute;
@@ -23,14 +33,19 @@ body {
     top: calc(50% - 17px);
 }
 
+#sb-trailer {
+    position: absolute;
+    bottom: 0px;
+}
+
 .node {
     stroke: #fff;
     stroke-width: 1.5px;
 }
 
 .node circle {
-  stroke: #fff;
-  stroke-width: 1.5px;
+    stroke: #fff;
+    stroke-width: 1.5px;
 }
 
 .link {

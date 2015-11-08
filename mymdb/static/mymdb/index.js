@@ -1,8 +1,8 @@
 
 // constants
 var standardRadius = 20;
-var width = window.innerWidth * 0.7;
-var height = window.innerHeight;
+var width = window.innerWidth * 0.65;
+var height = window.innerHeight - 45;
 
 //Set up the colour scale
 // var color = d3.scale.category20();
