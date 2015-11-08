@@ -103,7 +103,7 @@ function myGraph(el) {
     // Add and remove elements on the graph object
     this.addNode = function (title, genre, rating) {
         if (!node_seen.has(title)) {
-            nodes.push({"title":title,"genre":genre, "rating": rating});
+            nodes.push({"title":title,"genre":genre}, "rating": rating);
             update();
             node_seen.add(title)
         }
@@ -190,9 +190,7 @@ function myGraph(el) {
             .call(force.drag);
 
         nodeEnter.append("circle")
-            .attr("r", function (d) {
-                return d.rating * standardRadius
-            })
+            .attr("r", standardRadius)
             
 
         nodeEnter.append("text")
@@ -224,7 +222,7 @@ graph = new myGraph("#graph");
 
 function get_movie(title) {
     $.get('/movies/title/' + title, function (data) {
-        graph.addNode(data.title, data.genres[0], 1);
+        graph.addNode(data.title, data.genres[0], data.rating);
         var parentTitle = data.title;
 
         $.get('/movies/title/' + parentTitle, function (data) {
@@ -239,7 +237,7 @@ function get_movie(title) {
         $.get('/movies/title/' + title + '/recommendations', function (data) {
             for (var key in data) {
                 if (data.hasOwnProperty(key)) {
-                    graph.addNode(data[key][0], data[key][1], 1);
+                    graph.addNode(data[key][0], data[key][1], data[key][2]);
                     graph.addLink(parentTitle, data[key][0]);
                 }
             }
@@ -267,7 +265,7 @@ function switch_movie(title) {
     $.get('/movies/title/' + title + '/recommendations', function (data) {
         for (var key in data) {
             if (data.hasOwnProperty(key)) {
-                graph.addNode(data[key][0], data[key][1], 1);
+                graph.addNode(data[key][0], data[key][1], data[key][2]);
                 graph.addLink(title, data[key][0]);
             }
         }
