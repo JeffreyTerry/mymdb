@@ -191,7 +191,7 @@ function myGraph(el) {
 
         nodeEnter.append("circle")
             .attr("r", function (d) {
-                return standardRadius * 1 * Math.max(parseInt(d.rating) - 7, 0.8);
+                return standardRadius;
             })
             
 
