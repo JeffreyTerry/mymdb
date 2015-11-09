@@ -84,17 +84,6 @@ function genre_to_color(genre) {
 }
 
 // ------------------------------------------------------------------- start logic
-
-var input;
-$("#initial-input-box").keyup(function (event) {
-    if (event.keyCode == 13) {
-        input = document.getElementById("initial-input-box").value;
-        get_movie(input);
-        // TODO move this so that we don't delete the input box if the imdb search fails
-        document.getElementById("initial-input-box").remove(document.getElementById("initial-input-box"));
-    }
-});
-
 var seen = new Set();
 var node_seen = new Set();
 
@@ -191,7 +180,7 @@ function myGraph(el) {
 
         nodeEnter.append("circle")
             .attr("r", function (d) {
-                return standardRadius * 1 * Math.max(parseInt(d.rating) - 7, 0.8);
+                return standardRadius;
             })
             
 
@@ -221,69 +210,64 @@ function myGraph(el) {
 
 graph = new myGraph("#graph");
 
-
-function get_movie(title) {
-    $.get('/movies/title/' + title, function (data) {
-        graph.addNode(data.title, data.genres[0], data.rating);
-        var parentTitle = data.title;
-
-        $.get('/movies/title/' + parentTitle, function (data) {
-                $("#sb-title").text(data.title);
-                $("#sb-director").text("By: " + data.director);
-                $("#sb-metacritic-rating").text("Metacritic: " + data.metascore);
-                $("#sb-imdb-rating").text("IMDb: " + data.rating);
-                $("#sb-plot").text(data.plot);
-                $("#sb-photo").html('<img src="' + data.cover_url + '"></div>');
-        });
-
-        $.get('/movies/title/' + title + '/recommendations', function (data) {
-            for (var key in data) {
-                if (data.hasOwnProperty(key)) {
-                    graph.addNode(data[key][0], data[key][1], data[key][2]);
-                    graph.addLink(parentTitle, data[key][0]);
-                }
-            }
-            $("circle").unbind("click");
-            $("circle").click(function (event) {
-                console.log("hi");
-                var title = $(event.target).next().text()
-                switch_movie(title)
-                $.get('/movies/title/' + title, function (data) {
-                    $("#sb-title").text(data.title);
-                    $("#sb-director").text("By: " + data.director);
-                    $("#sb-metacritic-rating").text("Metacritic: " + data.metascore);
-                    $("#sb-imdb-rating").text("IMDb: " + data.rating);
-                    $("#sb-plot").text(data.plot);
-                    $("#sb-photo").html('<img src="' + data.cover_url + '"></div>');
-                });
-            });
-        });        
+function getMovieFromImdb(title, successCallback) {
+    $.get('/movies/title/' + htmlEncoded(title), function(data) {
+        if (data.err) {
+            // TODO error handling
+            console.log('err', data);
+        } else {
+            successCallback(data);
+        }
     });
 }
 
+function putMovieInSidebar(movie) {
+    $("#sb-title").text(movie.title);
+    $("#sb-director").text("By: " + movie.director);
+    $("#sb-metacritic-rating").text("Metacritic: " + movie.metascore);
+    $("#sb-imdb-rating").text("IMDb: " + movie.rating);
+    $("#sb-plot").text(movie.plot);
+    $("#sb-photo").html('<img src="' + movie.cover_url + '"></div>');
+}
 
-
-function switch_movie(title) {
-    $.get('/movies/title/' + title + '/recommendations', function (data) {
+function expandMovieNode(title) {
+    $.get('/movies/title/' + htmlEncoded(title) + '/recommendations', function (data) {
         for (var key in data) {
             if (data.hasOwnProperty(key)) {
                 graph.addNode(data[key][0], data[key][1], data[key][2]);
                 graph.addLink(title, data[key][0]);
             }
         }
+        // Unbind and rebind the click callback to ALL nodes
         $("circle").unbind("click");
-        $("circle").click(function (event) {
-            console.log("hi");
-            var title = $(event.target).next().text()
-            switch_movie(title)
-            $.get('/movies/title/' + title, function (data) {
-                $("#sb-title").text(data.title);
-                $("#sb-director").text("By: " + data.director);
-                $("#sb-metacritic-rating").text("Metacritic: " + data.metascore);
-                $("#sb-imdb-rating").text("IMDb: " + data.rating);
-                $("#sb-plot").text(data.plot);
-                $("#sb-photo").html('<img src="' + data.cover_url + '"></div>');
-            });
-        });
-    });        
+        $("circle").click(clickMovieNode);
+    });
 }
+
+function clickMovieNode(event) {
+    if ($(event.target).attr('clicked') !== 'true') {
+        $(event.target).attr('clicked', 'true');
+        var title = $(event.target).next().text()
+        expandMovieNode(title);
+        getMovieFromImdb(title, function (movie) {
+            putMovieInSidebar(movie);
+            $(event.target).attr('clicked', 'false');
+        });
+    }
+}
+
+function initializeInitialInputBox() {
+    $("#initial-input-box").keyup(function (event) {
+        if (event.keyCode == 13) {
+            $("#initial-input-box").attr('disabled', 'true');
+            getMovieFromImdb(document.getElementById("initial-input-box").value, function(movie) {
+                $("#initial-input-box").remove();
+                graph.addNode(movie.title, movie.genres[0], movie.rating);
+                expandMovieNode(movie.title);
+                putMovieInSidebar(movie);
+            });
+        }
+    });
+}
+
+initializeInitialInputBox();
