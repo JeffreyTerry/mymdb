@@ -30,29 +30,27 @@ function yt_init () {
 	gapi.client.setApiKey("AIzaSyBlb7Viu_8q9wxPCVCrMbS3orFU8f8I93Q");
 	gapi.client.load("youtube", "v3", function () {
 		// yt api is ready
-		sendRequest();
 	});
 }
 
-function sendRequest() {
-	// prepare the request
+function loadYoutube(title) {
+	var query = title.replace(" ", "+")+"trailer";
+
 	var request = gapi.client.youtube.search.list({
 		part : "snippet",
 		type : "video", 
-		q : "django",
-		maxResults : 3,
-		order: "viewCount"
+		maxResults : 1,
+		order: "viewCount",
+		q: query
 	});
 
-	// execute the request
 	request.execute(function (response) {
-		var results = response.result;
+		var item = response.result.items[0];
 
-		$.each(results.items, function (index, item) {
-			
-			console.log(item.id.videoId);
-			console.log(item.snippet.title);
-		});
+		console.log(item.snippet.title);
+		console.log(item.id.videoId);
+
+		$("#video").html('<iframe id="video-player" type="text/html" src="http://www.youtube.com/embed/' + item.id.videoId + '" frameborder="0" allowfullscreen></iframe>');
 
 	});	
 }

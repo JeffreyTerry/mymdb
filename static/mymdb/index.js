@@ -239,6 +239,7 @@ function expandMovieNode(title) {
             }
         }
         // Unbind and rebind the click callback to ALL nodes
+        loadYoutube(title); 
         $("circle").unbind("click");
         $("circle").click(clickMovieNode);
     });
@@ -247,7 +248,7 @@ function expandMovieNode(title) {
 function clickMovieNode(event) {
     if ($(event.target).attr('clicked') !== 'true') {
         $(event.target).attr('clicked', 'true');
-        var title = $(event.target).next().text()
+        var title = $(event.target).next().text();
         expandMovieNode(title);
         getMovieFromImdb(title, function (movie) {
             putMovieInSidebar(movie);

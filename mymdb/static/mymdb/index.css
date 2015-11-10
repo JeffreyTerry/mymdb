@@ -124,3 +124,7 @@ text {
     stroke-width: .5;
     font-size: 14px;
 }
+
+#video-player {
+    width: 100%;
+}
