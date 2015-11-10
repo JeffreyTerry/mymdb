@@ -16,15 +16,17 @@ def getMovieData(imdb_data):
     MovieView.ia.update(imdb_data, 'plot')
     MovieView.ia.update(imdb_data, 'critic reviews')
     res = {}
-    res['genres'] = imdb_data['genres']
-    res['rating'] = imdb_data['rating']
-    res['metascore'] = imdb_data['metascore']
-    res['plot'] = imdb_data['plot outline']
-    res['cover_url'] = imdb_data['cover url']
-    res['title'] = imdb_data['title']
-    res['runtimes'] = imdb_data['runtimes']
-    res['director'] = imdb_data['director'][0]['name']
-    # print imdb_data.keys()
+    try:
+        res['genres'] = imdb_data['genres']
+        res['plot'] = imdb_data['plot outline']
+        res['cover_url'] = imdb_data['cover url']
+        res['title'] = imdb_data['title']
+        res['runtimes'] = imdb_data['runtimes']
+        res['director'] = imdb_data['director'][0]['name']
+        res['rating'] = imdb_data['rating']
+        res['metascore'] = imdb_data['metascore']
+    except KeyError:
+        pass
     return JsonResponse(res)
 
 class MovieView(View):
@@ -36,17 +38,20 @@ class MovieView(View):
 
             if kwargs['recommendations']:
                 if kwargs['recommendations'] == 'recommendations':
-                    imdb_data = MovieView.ia.search_movie(title, results=1)[0]
-                    src = requests.get('http://www.imdb.com/title/tt' + imdb_data.movieID + '/').text
-                    bs = BeautifulSoup(src)
-                    titles = [rec.a.b.string for rec in bs.findAll('div', 'rec-title')]
-                    genres = [string.strip(rec.span.next_sibling) for rec in bs.findAll('div', 'rec-cert-genre')]
-                    rating = [string.strip(rec.string) for rec in bs.findAll('div', 'star-box-giga-star')]
-                    rating = [rating] * len(titles)
-                    res = {}
-                    for i, (title, genre, rating) in enumerate(zip(titles, genres, rating)):
-                        res[i] = title, genre, rating
-                    return JsonResponse(res)
+                    try:
+                        imdb_data = MovieView.ia.search_movie(title, results=1)[0]
+                        src = requests.get('http://www.imdb.com/title/tt' + imdb_data.movieID + '/').text
+                        bs = BeautifulSoup(src, 'lxml')
+                        titles = [rec.a.b.string for rec in bs.findAll('div', 'rec-title')]
+                        genres = [string.strip(rec.span.next_sibling) for rec in bs.findAll('div', 'rec-cert-genre')]
+                        rating = [string.strip(rec.string) for rec in bs.findAll('div', 'star-box-giga-star')]
+                        rating = [rating] * len(titles)
+                        res = {}
+                        for i, (title, genre, rating) in enumerate(zip(titles, genres, rating)):
+                            res[i] = title, genre, rating
+                        return JsonResponse(res)
+                    except:
+                        return JsonResponse({'err': 'could not parse recommendations from IMDb'})
                 else:
                     return JsonResponse({'err': 'bad url'})
             else:
