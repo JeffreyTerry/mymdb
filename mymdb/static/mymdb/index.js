@@ -1,24 +1,47 @@
 
 // constants
-var standardRadius = 20;
+var standardRadius = 22;
 var width = window.innerWidth * 0.65;
 var height = window.innerHeight - 45;
 
 //Set up the colour scale
 var color = d3.scale.category20();
 
-
-function mouseover() {
-  d3.select(this).select("circle").transition()
-      .duration(250)
-      .attr("r", standardRadius * 1.3);
+function mouseenter() {
+    // If we haven't already appended the outer circle
+    var secondaryCircle = d3.select(this)
+        .insert("circle", ':first-child')
+        .attr('class', 'secondary')
+        .attr("fill", function (d) {
+            var col = genre_to_color(d.genre)
+            return shadeColor(color(col), 50);
+        })
+        .attr("r", standardRadius)
+        .transition()
+        .duration(50)
+        .attr("r", standardRadius * 1.4);
+    $(this).first().click(clickMovieNode);
 }
 
-function mouseout() {
-  d3.select(this).select("circle").transition()
-      .duration(250)
-      .attr("r", standardRadius);
+function mouseleave() {
+    d3.select(this).selectAll("circle.secondary")
+        .transition()
+        .duration(50)
+        .attr("r", standardRadius)
+        .remove();
 }
+
+// function mouseover() {
+//   d3.select(this).select("circle").transition()
+//       .duration(250)
+//       .attr("r", standardRadius * 1.3);
+// }
+
+// function mouseout() {
+//   d3.select(this).select("circle").transition()
+//       .duration(250)
+//       .attr("r", standardRadius);
+// }
 
 function genre_to_color(genre) {
     if (genre == "Action") {
@@ -189,11 +212,12 @@ function myGraph(el) {
                 var col = genre_to_color(d.genre)
                 return color(col);
             })
-            .on("mouseover", mouseover)
-            .on("mouseout", mouseout)
+            .on("mouseenter", mouseenter)
+            .on("mouseleave", mouseleave)
             .call(force.drag);
 
         nodeEnter.append("circle")
+            .attr('class', 'primary')
             .attr("r", function (d) {
                 return standardRadius;
             });
@@ -246,7 +270,6 @@ function getMovieFromImdb(title, successCallback) {
                 if (!movieCache.hasOwnProperty(title)) {
                     movieCache[data.title] = {};
                 }
-                console.log('title', data.title);
                 movieCache[data.title]['movie'] = data;
                 if (successCallback)
                     successCallback(data);
@@ -278,9 +301,10 @@ function putMovieInSidebar(movie) {
     $("#sb-imdb-rating").text("IMDb: " + movie.rating);
     $("#sb-plot").text(movie.plot);
     $("#sb-photo").html('<img src="' + movie.cover_url + '"></div>');
+    loadYoutube(movie.title);
 }
 
-function expandMovieNode(title) {
+function expandMovieNode(title, successCallback) {
     if (!expandedNodes.has(title)) {
         expandedNodes.add(title);
         getRecommendationsFromImdb(title, function (data) {
@@ -292,36 +316,67 @@ function expandMovieNode(title) {
             // Unbind and rebind the click callback to ALL nodes
             $("circle").unbind("click");
             $("circle").click(clickMovieNode);
-            loadYoutube(title);
+            if (successCallback)
+                successCallback();
         });
     }
 }
 
 function clickMovieNode(event) {
-    if ($(event.target).attr('clicked') !== 'true') {
-        $(event.target).attr('clicked', 'true');
-        var title = $(event.target).parent().attr('movie-title');
+    var $target = $(event.target);
+    if ($target.attr('clicked') !== 'true') {
+        $target.attr('clicked', 'true');
+        var title = $target.parent().attr('movie-title');
         graph.fixNodePosition(title);
-        getMovieFromImdb(title, function (movie) {
-            putMovieInSidebar(movie);
-            $(event.target).attr('clicked', 'false');
-        });
-        expandMovieNode(title);
+        if ($target.attr('class') === 'primary') {
+            clearSidebar();
+            $("#sb-title").text(title);
+            showSidebarSpinner();
+            getMovieFromImdb(title, function (movie) {
+                putMovieInSidebar(movie);
+                hideSidebarSpinner();
+                $target.attr('clicked', 'false');
+            });
+        } else if ($target.attr('class') === 'secondary') {
+            expandMovieNode(title, function () {
+                $target.attr('clicked', 'false');
+            });
+        }
     }
 }
 
 function initializeInitialInputBox() {
     $("#initial-input-box").keyup(function (event) {
         if (event.keyCode == 13) {
-            $("#initial-input-box").attr('disabled', 'true');
-            getMovieFromImdb(document.getElementById("initial-input-box").value, function(movie) {
-                $("#initial-input-box").remove();
+            var inputTitle = document.getElementById("initial-input-box").value;
+            $("#initial-input-box").remove();
+            showSidebarSpinner()
+            getMovieFromImdb(inputTitle, function(movie) {
+                hideSidebarSpinner();
                 graph.addNode(movie.title, movie.genres[0], movie.rating);
                 expandMovieNode(movie.title);
                 putMovieInSidebar(movie);
             });
         }
     });
+}
+
+function clearSidebar() {
+    $("#sb-title").text('');
+    $("#sb-director").text('');
+    $("#sb-metacritic-rating").text('');
+    $("#sb-imdb-rating").text('');
+    $("#sb-plot").text('');
+    $("#sb-photo").html('');
+    $("#video").html('');
+}
+
+function showSidebarSpinner() {
+    $("#sb-loader-container").css('display', 'block');
+}
+
+function hideSidebarSpinner() {
+    $("#sb-loader-container").css('display', 'none');
 }
 
 initializeInitialInputBox();

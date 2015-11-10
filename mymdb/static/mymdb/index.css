@@ -92,7 +92,7 @@ body {
 
 #initial-input-box {
     position: absolute;
-    width: 90%;
+    width: calc(100% - 90px);
     top: calc(50% - 17px);
 }
 
@@ -102,8 +102,6 @@ body {
 }
 
 .node circle {
-  stroke: #fff;
-  stroke-width: 1.5px;
   cursor: pointer;
 }
 
@@ -124,4 +122,11 @@ text {
 
 #video-player {
     width: 100%;
+}
+
+#sb-loader-container {
+    position: absolute;
+    left: calc(50% - 26px);
+    top: calc(50% - 20px);
+    display: none;
 }
