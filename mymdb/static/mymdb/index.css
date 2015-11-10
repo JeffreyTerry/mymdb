@@ -101,26 +101,23 @@ body {
     bottom: 0px;
 }
 
-.node {
-    stroke: #fff;
-    stroke-width: 1.5px;
-}
-
 .node circle {
-  /*stroke: #fff;*/
+  stroke: #fff;
   stroke-width: 1.5px;
   cursor: pointer;
 }
 
 .link {
-    stroke: #666;
+  stroke: #999;
+  stroke-opacity: .6;
 }
 
 text {
-    cursor: pointer;
+    cursor: default;
     stroke: #0879C2;
     font-family: "Lucida Grande", "Droid Sans", Arial, Helvetica, sans-serif;
     font-weight: normal;
     stroke-width: .5;
     font-size: 14px;
+    text-shadow: 0 0 4px white;
 }

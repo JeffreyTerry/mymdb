@@ -84,17 +84,23 @@ function genre_to_color(genre) {
 }
 
 // ------------------------------------------------------------------- start logic
-var seen = new Set();
-var node_seen = new Set();
+var linkedNodes = new Set();
+var existingNodes = new Set();
+var expandedNodes = new Set();
+var movieCache = {};  // title -> {'movie': movie_data_object, 'recommendations': list_of_recommendation_objects}
 
 function myGraph(el) {
 
+    this.fixNodePosition = function (title) {
+        nodes[findNodeIndex(title)].fixed = true;
+    }
+
     // Add and remove elements on the graph object
     this.addNode = function (title, genre, rating) {
-        if (!node_seen.has(title)) {
+        if (!existingNodes.has(title)) {
             nodes.push({"title":title,"genre":genre, "rating": rating});
             update();
-            node_seen.add(title)
+            existingNodes.add(title)
         }
     }
 
@@ -117,10 +123,9 @@ function myGraph(el) {
         var targetNode = findNode(targetTitle);
 
         if((sourceNode !== undefined) && (targetNode !== undefined)) {
-
-            if (!seen.has(targetNode.title)) {
+            if (!linkedNodes.has(targetNode.title)) {
                 links.push({"source": sourceNode, "target": targetNode});
-                seen.add(targetNode.title);
+                linkedNodes.add(targetNode.title);
                 update();
             }
         }
@@ -141,13 +146,23 @@ function myGraph(el) {
     }
 
     // set up the D3 visualisation in the specified element
-    var vis = this.vis = d3.select(el).append("svg:svg")
+    var svg = this.svg = d3.select(el).append("svg:svg")
         .attr("width", width)
         .attr("height", height);
 
+    svg.append("g")
+        .attr("class", "links");
+
+    svg.append("g")
+        .attr("class", "nodes");
+
+    svg.append("g")
+        .attr("class", "node-titles");
+
     var force = d3.layout.force()
-        .gravity(.2)
-        .distance(30)
+        .gravity(0.1)
+        .friction(0.7)
+        .linkDistance(100)
         .charge(-2000)
         .size([width, height]);
 
@@ -156,7 +171,7 @@ function myGraph(el) {
 
     var update = function () {
 
-        var link = vis.selectAll("line.link")
+        var link = svg.select("g.links").selectAll("line.link")
             .data(links, function(d) { return d.source.title + "-" + d.target.title; });
 
         link.enter().insert("line")
@@ -164,12 +179,12 @@ function myGraph(el) {
 
         link.exit().remove();
 
-        var node = vis.selectAll("g.node")
-            .data(nodes, function(d) { return d.title;});
-
+        var node = svg.select("g.nodes").selectAll("g.node")
+            .data(nodes, function(d) { return d.title; });
 
         var nodeEnter = node.enter().append("g")
             .attr("class", "node")
+            .attr("movie-title", function (d) { return d.title; })
             .style("fill", function (d) {
                 var col = genre_to_color(d.genre)
                 return color(col);
@@ -181,15 +196,21 @@ function myGraph(el) {
         nodeEnter.append("circle")
             .attr("r", function (d) {
                 return standardRadius;
-            })
-            
-
-        nodeEnter.append("text")
-            .attr("dx", 23)
-            .attr("dy", ".35em")
-            .text(function (d) {return d.title})
+            });
 
         node.exit().remove();
+
+        var text = svg.select("g.node-titles").selectAll("text.node-title")
+            .data(nodes, function(d) { return d.title; });
+
+        var textEnter = text.enter()
+            .append("text")
+            .attr("class", "node-title")
+            .attr("dx", 23)
+            .attr("dy", ".35em")
+            .text(function (d) { return d.title } );
+
+        text.exit().remove();
 
         force.on("tick", function() {
           link.attr("x1", function(d) { return d.source.x; })
@@ -198,6 +219,8 @@ function myGraph(el) {
               .attr("y2", function(d) { return d.target.y; });
 
           node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+
+          text.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
         });
 
         // Restart the force layout.
@@ -211,14 +234,41 @@ function myGraph(el) {
 graph = new myGraph("#graph");
 
 function getMovieFromImdb(title, successCallback) {
-    $.get('/movies/title/' + htmlEncoded(title), function(data) {
-        if (data.err) {
-            // TODO error handling
-            console.log('err', data);
-        } else {
-            successCallback(data);
-        }
-    });
+    if (movieCache.hasOwnProperty(title) && movieCache[title].hasOwnProperty('movie')) {
+        if (successCallback)
+            successCallback(movieCache[title]['movie']);
+    } else {
+        $.get('/movies/title/' + htmlEncoded(title), function(data) {
+            if (data.err) {
+                // TODO error handling
+                console.log('err', data);
+            } else {
+                if (!movieCache.hasOwnProperty(title)) {
+                    movieCache[data.title] = {};
+                }
+                console.log('title', data.title);
+                movieCache[data.title]['movie'] = data;
+                if (successCallback)
+                    successCallback(data);
+            }
+        });
+    }
+}
+
+function getRecommendationsFromImdb(strictTitle, successCallback) {
+    if (movieCache.hasOwnProperty(strictTitle) && movieCache[strictTitle].hasOwnProperty('recommendations')) {
+        if (successCallback)
+            successCallback(movieCache[strictTitle]['recommendations']);
+    } else {
+        $.get('/movies/title/' + htmlEncoded(strictTitle) + '/recommendations', function(data) {
+            if (!movieCache.hasOwnProperty(strictTitle)) {
+                movieCache[strictTitle] = {};
+            }
+            movieCache[strictTitle]['recommendations'] = data;
+            if (successCallback)
+                successCallback(data);
+        });
+    }
 }
 
 function putMovieInSidebar(movie) {
@@ -231,28 +281,31 @@ function putMovieInSidebar(movie) {
 }
 
 function expandMovieNode(title) {
-    $.get('/movies/title/' + htmlEncoded(title) + '/recommendations', function (data) {
-        for (var key in data) {
-            if (data.hasOwnProperty(key)) {
-                graph.addNode(data[key][0], data[key][1], data[key][2]);
+    if (!expandedNodes.has(title)) {
+        expandedNodes.add(title);
+        getRecommendationsFromImdb(title, function (data) {
+            for (var key in data) {
+                getRecommendationsFromImdb(data[key][0]);  // Cache this node's expansion in order to speed up the app
+                graph.addNode(data[key][0], data[key][1], data[key][2]);  // title, genre, rating
                 graph.addLink(title, data[key][0]);
             }
-        }
-        // Unbind and rebind the click callback to ALL nodes
-        $("circle").unbind("click");
-        $("circle").click(clickMovieNode);
-    });
+            // Unbind and rebind the click callback to ALL nodes
+            $("circle").unbind("click");
+            $("circle").click(clickMovieNode);
+        });
+    }
 }
 
 function clickMovieNode(event) {
     if ($(event.target).attr('clicked') !== 'true') {
         $(event.target).attr('clicked', 'true');
-        var title = $(event.target).next().text()
-        expandMovieNode(title);
+        var title = $(event.target).parent().attr('movie-title');
+        graph.fixNodePosition(title);
         getMovieFromImdb(title, function (movie) {
             putMovieInSidebar(movie);
             $(event.target).attr('clicked', 'false');
         });
+        expandMovieNode(title);
     }
 }
 
