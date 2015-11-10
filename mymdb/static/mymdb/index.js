@@ -316,6 +316,7 @@ function expandMovieNode(title, successCallback) {
             // Unbind and rebind the click callback to ALL nodes
             $("circle").unbind("click");
             $("circle").click(clickMovieNode);
+            graph.fixNodePosition(title);
             if (successCallback)
                 successCallback();
         });
@@ -328,7 +329,6 @@ function clickMovieNode(event) {
     if ($target.attr('clicked') !== 'true') {
         $target.attr('clicked', 'true');
         var title = $target.parent().attr('movie-title');
-        graph.fixNodePosition(title);
         if ($target.attr('class') === 'primary') {
             clearSidebar();
             $("#sb-title").text(title);
