@@ -322,6 +322,7 @@ function expandMovieNode(title, successCallback) {
     }
 }
 
+var activeMovie = '';
 function clickMovieNode(event) {
     var $target = $(event.target);
     if ($target.attr('clicked') !== 'true') {
@@ -332,9 +333,12 @@ function clickMovieNode(event) {
             clearSidebar();
             $("#sb-title").text(title);
             showSidebarSpinner();
+            activeMovie = title;
             getMovieFromImdb(title, function (movie) {
-                putMovieInSidebar(movie);
-                hideSidebarSpinner();
+                if (movie.title === activeMovie) {
+                    hideSidebarSpinner();
+                    putMovieInSidebar(movie);
+                }
                 $target.attr('clicked', 'false');
             });
         } else if ($target.attr('class') === 'secondary') {
