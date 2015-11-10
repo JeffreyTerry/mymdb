@@ -121,3 +121,7 @@ text {
     font-size: 14px;
     text-shadow: 0 0 4px white;
 }
+
+#video-player {
+    width: 100%;
+}

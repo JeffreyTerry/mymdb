@@ -292,6 +292,7 @@ function expandMovieNode(title) {
             // Unbind and rebind the click callback to ALL nodes
             $("circle").unbind("click");
             $("circle").click(clickMovieNode);
+            loadYoutube(title);
         });
     }
 }

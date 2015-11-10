@@ -1,6 +1,13 @@
+@font-face {
+  font-family: 'kenyancoffee';
+  src: url('./kenyc.ttf');
+  src: local('./kenyc.ttf');
+}
+
 body {
     margin: 0;
     padding: 0;
+    font-family: opensans;
 }
 
 #banner {
@@ -8,23 +15,79 @@ body {
     top: 0px;
     left: 0px;
     right: 0px;
-    height: 40px;
+    height: 45px;
     background-color: #0879C2;
+}
+
+#br-title {
+    font-family: 'Play', sans-serif;
+    font-size: 32px;
+    color: white;
+    position: absolute;
+    left: calc(50% - 55px);
 }
 
 #graph {
     position: absolute;
-    top: 40px;
+    top: 45px;
     bottom: 0px;
     left: 0px;
 }
 
 #sidebar {
-    width: 30%;
-    top: 40px;
+    width: 35%;
+    top: 45px;
     bottom: 0px;
     right: 0px;
     position: absolute;
+    padding-top: 80px;
+    padding-right: 50px;
+    padding-left: 40px;
+}
+
+#sb-title {
+    font-size: 50px;
+    font-family: 'Bangers', cursive;
+}
+
+#sb-photo {
+    width: 30%;
+    float: right;
+    margin-right: 4px;
+}
+
+#sb-photo > img {
+    width: 100%;
+}
+
+#sb-plot {
+    float: left;
+    width: calc(70% - 12px);
+    margin-left: 4px;
+    margin-top: 15px;
+}
+
+#sb-director {
+    font-weight: bold;
+    font-size: 20px;
+    float: left;
+}
+
+#sb-imdb-rating {
+    font-size: 20px;
+    float: right;
+    margin-right: 20px;
+}
+
+#sb-metacritic-rating {
+    font-size: 20px;
+    float: right;
+    margin-right: 20px;
+}
+
+#sb-photo-plot-wrapper {
+    clear: both;
+    padding-top: 10px;
 }
 
 #initial-input-box {
@@ -44,10 +107,24 @@ body {
 }
 
 .node circle {
-    stroke: #fff;
-    stroke-width: 1.5px;
+  /*stroke: #fff;*/
+  stroke-width: 1.5px;
+  cursor: pointer;
 }
 
 .link {
     stroke: #666;
+}
+
+text {
+    cursor: pointer;
+    stroke: #0879C2;
+    font-family: "Lucida Grande", "Droid Sans", Arial, Helvetica, sans-serif;
+    font-weight: normal;
+    stroke-width: .5;
+    font-size: 14px;
+}
+
+#video-player {
+    width: 100%;
 }
