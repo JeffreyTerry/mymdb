@@ -15,11 +15,10 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
-from . import views
+from mymdb import views
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^$', views.IndexView.as_view(), name='home'),
-    url(r'^movies/title/(?P<title>.*)/(?P<recommendations>.*)$', views.MovieView.as_view(), name='movie-title-view'),
-    url(r'^movies/id/(?P<id>.*)$', views.MovieIdView.as_view(), name='movie-id-view'),
+    url(r'^movies/recommendations/(?P<id>.*)$', views.MovieView.as_view(), name='movie-recommendations-view')
 ]
