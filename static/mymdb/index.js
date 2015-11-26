@@ -108,62 +108,65 @@ function genre_to_color(genre) {
 
 // ------------------------------------------------------------------- start logic
 var linkedNodes = new Set();
-var existingNodes = new Set();
+var existingNodes = new Set();  // {imdbIDs}
 var expandedNodes = new Set();
-var movieCache = {};  // title -> {'movie': movie_data_object, 'recommendations': list_of_recommendation_objects}
+var movieCache = {};  // imdbID -> {'movie': movie_data_object, 'recommendations': list_of_recommendation_objects}
 
 function myGraph(el) {
 
-    this.fixNodePosition = function (title) {
-        nodes[findNodeIndex(title)].fixed = true;
+    this.fixNodePosition = function (id) {
+        nodes[findNodeIndex(id)].fixed = true;
     }
 
     // Add and remove elements on the graph object
-    this.addNode = function (title, genre, rating) {
-        if (!existingNodes.has(title)) {
-            nodes.push({"title":title,"genre":genre, "rating": rating});
+    this.addNode = function (title, id, genre, rating) {
+        if (!existingNodes.has(id)) {
+            nodes.push({'title': title,
+                        'id': id,
+                        'genre': genre,
+                        'rating': rating});
             update();
-            existingNodes.add(title)
+            existingNodes.add(id)
         }
     }
 
-    this.removeNode = function (title) {
+    this.removeNode = function (id) {
         var i = 0;
-        var n = findNode(title);
+        var n = findNode(id);
         while (i < links.length) {
             if ((links[i]['source'] === n)||(links[i]['target'] == n)) links.splice(i,1);
             else i++;
         }
-        var index = findNodeIndex(title);
+        var index = findNodeIndex(id);
         if(index !== undefined) {
             nodes.splice(index, 1);
             update();
         }
     }
 
-    this.addLink = function (sourceTitle, targetTitle) {
-        var sourceNode = findNode(sourceTitle);
-        var targetNode = findNode(targetTitle);
+    this.addLink = function (sourceID, targetID) {
+        var sourceNode = findNode(sourceID);
+        var targetNode = findNode(targetID);
 
         if((sourceNode !== undefined) && (targetNode !== undefined)) {
-            if (!linkedNodes.has(targetNode.title)) {
+            if (!linkedNodes.has(targetNode.id)) {
                 links.push({"source": sourceNode, "target": targetNode});
-                linkedNodes.add(targetNode.title);
+                linkedNodes.add(targetNode.id);
                 update();
             }
         }
     }
 
-    var findNode = function (title) {
+    var findNode = function (id) {
         for (var i=0; i < nodes.length; i++) {
-            if (nodes[i].title === title)
+            if (nodes[i].id === id)
                 return nodes[i]
         };
     }
 
-    var findNodeIndex = function (title) {
+    var findNodeIndex = function (id) {
         for (var i=0; i < nodes.length; i++) {
-            if (nodes[i].title === title)
+            if (nodes[i].id === id)
                 return i
         };
     }
@@ -195,7 +198,7 @@ function myGraph(el) {
     var update = function () {
 
         var link = svg.select("g.links").selectAll("line.link")
-            .data(links, function(d) { return d.source.title + "-" + d.target.title; });
+            .data(links, function(d) { return d.source.id + "-" + d.target.id; });
 
         link.enter().insert("line")
             .attr("class", "link");
@@ -208,6 +211,7 @@ function myGraph(el) {
         var nodeEnter = node.enter().append("g")
             .attr("class", "node")
             .attr("movie-title", function (d) { return d.title; })
+            .attr("movie-id", function (d) { return d.id; })
             .style("fill", function (d) {
                 var col = genre_to_color(d.genre)
                 return color(col);
@@ -225,7 +229,7 @@ function myGraph(el) {
         node.exit().remove();
 
         var text = svg.select("g.node-titles").selectAll("text.node-title")
-            .data(nodes, function(d) { return d.title; });
+            .data(nodes, function(d) { return 'd.title'; });
 
         var textEnter = text.enter()
             .append("text")
@@ -257,37 +261,57 @@ function myGraph(el) {
 
 graph = new myGraph("#graph");
 
-function getMovieFromImdb(title, successCallback) {
-    if (movieCache.hasOwnProperty(title) && movieCache[title].hasOwnProperty('movie')) {
-        if (successCallback)
-            successCallback(movieCache[title]['movie']);
+function getMovieFromImdb(id, callback) {
+    if (movieCache.hasOwnProperty(id) && movieCache[id].hasOwnProperty('movie')) {
+        if (callback)
+            callback(null, movieCache[id]['movie']);
     } else {
-        $.get('/movies/title/' + htmlEncoded(title), function(data) {
-            if (data.err) {
-                // TODO error handling
-                console.log('err', data);
+        omdb.get({id: id}, function(err, data) {
+            if (err) {
+                callback(err);
             } else {
-                if (!movieCache.hasOwnProperty(title)) {
-                    movieCache[data.title] = {};
+                if (!movieCache.hasOwnProperty(data.imdbID)) {
+                    movieCache[data.imdbID] = {};
                 }
-                movieCache[data.title]['movie'] = data;
-                if (successCallback)
-                    successCallback(data);
+                movieCache[data.imdbID]['movie'] = data;
+                console.log(data);
+                if (callback)
+                    callback(null, data);
             }
         });
     }
 }
 
-function getRecommendationsFromImdb(strictTitle, successCallback) {
-    if (movieCache.hasOwnProperty(strictTitle) && movieCache[strictTitle].hasOwnProperty('recommendations')) {
-        if (successCallback)
-            successCallback(movieCache[strictTitle]['recommendations']);
-    } else {
-        $.get('/movies/title/' + htmlEncoded(strictTitle) + '/recommendations', function(data) {
-            if (!movieCache.hasOwnProperty(strictTitle)) {
-                movieCache[strictTitle] = {};
+// This function should only be used when we need to search for a movie based on a user query.
+// Its result is often counterintuitive.
+function getMovieFromIMDbByTitle(titleQuery, callback) {
+    omdb.get({title: titleQuery}, function(err, data) {
+        if (err) {
+            callback(err);
+        } else {
+            if (!movieCache.hasOwnProperty(data.imdbID)) {
+                movieCache[data.imdbID] = {};
             }
-            movieCache[strictTitle]['recommendations'] = data;
+            movieCache[data.imdbID]['movie'] = data;
+            console.log(data);
+            if (callback)
+                callback(null, data);
+        }
+    });
+}
+
+function getRecommendationsFromImdb(id, successCallback) {
+    if (movieCache.hasOwnProperty(id) && movieCache[id].hasOwnProperty('recommendations')) {
+        if (successCallback)
+            successCallback(movieCache[id]['recommendations']);
+    } else {
+        $.get('/movies/recommendations/' + htmlEncoded(id), function(data) {
+            console.log(id);
+            console.log(data);
+            if (!movieCache.hasOwnProperty(id)) {
+                movieCache[id] = {};
+            }
+            movieCache[id]['recommendations'] = data;
             if (successCallback)
                 successCallback(data);
         });
@@ -295,54 +319,56 @@ function getRecommendationsFromImdb(strictTitle, successCallback) {
 }
 
 function putMovieInSidebar(movie) {
-    $("#sb-title").text(movie.title);
-    $("#sb-director").text("By: " + movie.director);
-    $("#sb-metacritic-rating").text("Metacritic: " + movie.metascore);
-    $("#sb-imdb-rating").text("IMDb: " + movie.rating);
-    $("#sb-plot").text(movie.plot);
-    $("#sb-photo").html('<img src="' + movie.cover_url + '"></div>');
-    loadYoutube(movie.title);
+    $("#sb-title").text(movie.Title);
+    $("#sb-director").text("By: " + movie.Director);
+    $("#sb-metacritic-rating").text("Metacritic: " + movie.Metascore);
+    $("#sb-imdb-rating").text("IMDb: " + movie.imdbRating);
+    $("#sb-plot").text(movie.Plot);
+    $("#sb-photo").html('<img src="' + movie.Poster + '"></div>');
+    loadYoutube(movie.Title);
 }
 
-function expandMovieNode(title, successCallback) {
-    if (!expandedNodes.has(title)) {
-        expandedNodes.add(title);
-        getRecommendationsFromImdb(title, function (data) {
-            for (var key in data) {
-                getRecommendationsFromImdb(data[key][0]);  // Cache this node's expansion in order to speed up the app
-                graph.addNode(data[key][0], data[key][1], data[key][2]);  // title, genre, rating
-                graph.addLink(title, data[key][0]);
+function expandMovieNode(id, successCallback) {
+    if (!expandedNodes.has(id)) {
+        expandedNodes.add(id);
+        getRecommendationsFromImdb(id, function (movies) {
+            for (movie in movies) {
+                movieCache[movies[movie]['id']]['recommendations'] = movies['movie'];
+                graph.addNode(movies[movie]['title'], movies[movie]['id'],
+                    movies[movie]['genre'], movies[movie]['rating']);
+                graph.addLink(id, movies[movie]['id']);
             }
             // Unbind and rebind the click callback to ALL nodes
             $("circle").unbind("click");
             $("circle").click(clickMovieNode);
-            graph.fixNodePosition(title);
+            graph.fixNodePosition(id);
             if (successCallback)
                 successCallback();
         });
     }
 }
 
-var activeMovie = '';
+var activeMovieID = '';
 function clickMovieNode(event) {
     var $target = $(event.target);
     if ($target.attr('clicked') !== 'true') {
         $target.attr('clicked', 'true');
         var title = $target.parent().attr('movie-title');
+        var id = $target.parent().attr('movie-id');
         if ($target.attr('class') === 'primary') {
             clearSidebar();
             $("#sb-title").text(title);
             showSidebarSpinner();
-            activeMovie = title;
-            getMovieFromImdb(title, function (movie) {
-                if (movie.title === activeMovie) {
+            activeMovieID = id;
+            getMovieFromImdb(id, function (movie) {
+                if (movie.imdbID === activeMovieID) {
                     hideSidebarSpinner();
                     putMovieInSidebar(movie);
                 }
                 $target.attr('clicked', 'false');
             });
         } else if ($target.attr('class') === 'secondary') {
-            expandMovieNode(title, function () {
+            expandMovieNode(id, function () {
                 $target.attr('clicked', 'false');
             });
         }
@@ -353,12 +379,17 @@ function initializeInitialInputBox() {
     $("#initial-input-box").keyup(function (event) {
         if (event.keyCode == 13) {
             var inputTitle = document.getElementById("initial-input-box").value;
-            $("#initial-input-box").remove();
+            $("#initial-input-box").hide();
             showSidebarSpinner()
-            getMovieFromImdb(inputTitle, function(movie) {
+            getMovieFromIMDbByTitle(inputTitle, function(err, movie) {
                 hideSidebarSpinner();
-                graph.addNode(movie.title, movie.genres[0], movie.rating);
-                expandMovieNode(movie.title);
+                if (err) {
+                    $("#initial-input-box").show();
+                } else {
+                    $("#initial-input-box").remove();
+                }
+                graph.addNode(movie.Title, movie.imdbID, movie.Genre.split(', ')[0], movie.imdbRating);
+                expandMovieNode(movie.imdbID);
                 putMovieInSidebar(movie);
             });
         }

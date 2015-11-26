@@ -33,49 +33,41 @@ class MovieView(View):
     ia = IMDb()
 
     def get(self, request, *args, **kwargs):
-        if 'title' in kwargs:
-            title = kwargs['title']
+        try:
+            src = requests.get('http://www.imdb.com/title/' + kwargs['id'] + '/').text
+            bs = BeautifulSoup(src, 'lxml')
 
-            if kwargs['recommendations']:
-                if kwargs['recommendations'] == 'recommendations':
-                    try:
-                        imdb_data = MovieView.ia.search_movie(title, results=1)[0]
-                        src = requests.get('http://www.imdb.com/title/tt' + imdb_data.movieID + '/').text
-                        bs = BeautifulSoup(src, 'lxml')
-                        titles = [rec.a.b.string for rec in bs.findAll('div', 'rec-title')]
-                        genres = [string.strip(rec.span.next_sibling) for rec in bs.findAll('div', 'rec-cert-genre')]
-                        rating = [string.strip(rec.string) for rec in bs.findAll('div', 'star-box-giga-star')]
-                        rating = [rating] * len(titles)
-                        res = {}
-                        for i, (title, genre, rating) in enumerate(zip(titles, genres, rating)):
-                            res[i] = title, genre, rating
-                        return JsonResponse(res)
-                    except:
-                        return JsonResponse({'err': 'could not parse recommendations from IMDb'})
+            ### PARSE TITLES AND IDS ###
+            titles = [rec.a.b.string for rec in bs.findAll('div', 'rec-title')]
+            ids = [rec['data-tconst'] for rec in bs.findAll('div', 'rec_overview')]
+
+            ### PARSE GENRES ###
+            genres_htmls = [rec for rec in bs.findAll('div', 'rec-cert-genre')]
+            genres = []
+            for g in genres_htmls:
+                span = g.find('span', recursive=False)
+                if span:
+                    genres.append(span.next_sibling)
                 else:
-                    return JsonResponse({'err': 'bad url'})
-            else:
-                # Grab data from IMDb
-                imdb_datas = MovieView.ia.search_movie(title, results=1)
-                if imdb_datas:
-                    imdb_data = imdb_datas[0]
-                    return getMovieData(imdb_data)
-                else:
-                    return JsonResponse({'err': 'no data found in imdb'})
+                    genres.append(g.string)
+            genres = map(lambda g: string.strip(g), genres)
 
-    def post(self, request, *args, **kwargs):
-        return HttpResponse('This is POST request')
+            ### PARSE RATINGS ###
+            ratings_htmls = [rec for rec in bs.findAll('div', 'rec-rating')]
+            ratings = []
+            for rr in ratings_htmls:
+                ratings.append(rr.find('span', 'rating-rating').span.string)
 
-
-class MovieIdView(View):
-    ia = IMDb()
-
-    def get(self, request, *args, **kwargs):
-        movieID = kwargs['id']
-
-        # Grab data from IMDb
-        imdb_data = MovieView.ia.get_movie(movieID)
-        return getMovieData(imdb_data)
+            results = []
+            for i, (title, movie_id, genre, rating) in enumerate(zip(titles, ids, genres, ratings)):
+                results.append({})
+                results[i]['title'] = title
+                results[i]['id'] = movie_id
+                results[i]['genre'] = genre
+                results[i]['rating'] = rating
+            return JsonResponse(results, safe=False)
+        except Exception as e:
+            return JsonResponse({'err': 'could not parse recommendations from IMDb', 'exc': repr(e)})
 
     def post(self, request, *args, **kwargs):
         return HttpResponse('This is POST request')

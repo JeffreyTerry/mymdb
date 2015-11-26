@@ -1,0 +1,9 @@
+{
+  "name": "mymdb",
+  "version": "0.0.1",
+  "dependencies": {
+    "omdb-client": "~1.0.6",
+    "colorbrewer": "~1.0.0"
+  },
+  "private": true
+}
