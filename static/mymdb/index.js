@@ -6,9 +6,11 @@ var height = window.innerHeight - 45;
 
 //Set up the colour scale
 // var color = d3.scale.category20();
+var customColorRange = colorbrewer.RdYlGn[11].slice(0, 6);
+customColorRange.extend(colorbrewer.RdYlGn[11].slice(7));
 var color = d3.scale.ordinal()
                 .domain([4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10])
-                .range(colorbrewer.BrBG[11]);
+                .range(customColorRange);
 
 function roundToNearestHalf(x) {
     return Math.round(x * 2) / 2;

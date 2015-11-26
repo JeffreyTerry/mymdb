@@ -35,7 +35,6 @@ function yt_init () {
 
 function loadYoutubeTrailer(title, year) {
 	var query = title.replace(" ", "+") + "+" + year + "+official+trailer";
-	console.log(query);
 	if (gapi.client.youtube) {
 		var request = gapi.client.youtube.search.list({
 			part : "snippet",

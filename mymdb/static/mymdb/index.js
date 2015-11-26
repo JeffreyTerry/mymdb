@@ -6,9 +6,11 @@ var height = window.innerHeight - 45;
 
 //Set up the colour scale
 // var color = d3.scale.category20();
+var customColorRange = colorbrewer.RdYlGn[11].slice(0, 5);
+Array.prototype.push.apply(customColorRange, colorbrewer.RdYlGn[11].slice(6));
 var color = d3.scale.ordinal()
                 .domain([4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10])
-                .range(colorbrewer.BrBG[11]);
+                .range(customColorRange);
 
 function roundToNearestHalf(x) {
     return Math.round(x * 2) / 2;
@@ -360,12 +362,17 @@ function getRecommendationsFromImdb(id, callback) {
             callback(null, movieCache[id]['recommendations']);
     } else {
         $.get('/movies/recommendations/' + htmlEncoded(id), function(data) {
-            if (!movieCache.hasOwnProperty(id)) {
-                movieCache[id] = {};
+            if (data.hasOwnProperty('err')) {
+                if (callback)
+                    callback(data);
+            } else {
+                if (!movieCache.hasOwnProperty(id)) {
+                    movieCache[id] = {};
+                }
+                movieCache[id]['recommendations'] = data;
+                if (callback)
+                    callback(null, data);
             }
-            movieCache[id]['recommendations'] = data;
-            if (callback)
-                callback(null, data);
         });
     }
 }
@@ -396,26 +403,31 @@ function expandMovieNode(id, successCallback) {
     if (!expandedNodes.has(id)) {
         expandedNodes.add(id);
         getRecommendationsFromImdb(id, function(err, movies) {
-            movies = _.reject(movies, function(movie) {
-                return existingNodes.has(movie.id);
-            });
-            movies = _.sample(movies, 3);
-            for (var i = 0; i < movies.length; ++i) {
-                // Add the recommended movies to the graph
-                var movie = movies[i];
-                graph.addNode(movie['title'], movie['id'],
-                    movie['genre'], movie['rating']);
-                graph.addLink(id, movie['id']);
+            if (err) {
+                console.log('Error: ', err);
+            } else {
+                console.log(movies)
+                movies = _.reject(movies, function(movie) {
+                    return existingNodes.has(movie.id);
+                });
+                movies = _.sample(movies, 3);
+                for (var i = 0; i < movies.length; ++i) {
+                    // Add the recommended movies to the graph
+                    var movie = movies[i];
+                    graph.addNode(movie['title'], movie['id'],
+                        movie['genre'], movie['rating']);
+                    graph.addLink(id, movie['id']);
 
-                // Cache recommendations for the movies we just added to the graph
-                getRecommendationsFromImdb(movie['id']);
+                    // Cache recommendations for the movies we just added to the graph
+                    getRecommendationsFromImdb(movie['id']);
+                }
+                // Unbind and rebind the click callback to ALL nodes
+                $("circle").unbind("click");
+                $("circle").click(clickMovieNode);
+                // graph.fixNodePosition(id);
+                if (successCallback)
+                    successCallback();
             }
-            // Unbind and rebind the click callback to ALL nodes
-            $("circle").unbind("click");
-            $("circle").click(clickMovieNode);
-            // graph.fixNodePosition(id);
-            if (successCallback)
-                successCallback();
         });
     }
 }
@@ -433,7 +445,10 @@ function clickMovieNode(event) {
             showSidebarSpinner();
             activeMovieID = id;
             getMovieFromImdb(id, function(err, movie) {
-                if (movie.imdbID === activeMovieID) {
+                console.log(err, movie);
+                if (err) {
+                    alert('Error: ', err);
+                } else if (movie.imdbID === activeMovieID) {
                     hideSidebarSpinner();
                     putMovieInSidebar(movie);
                 }
