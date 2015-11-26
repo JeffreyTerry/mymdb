@@ -11,24 +11,6 @@ class IndexView(TemplateView):
     template_name = 'mymdb/index.html'
 
 
-def getMovieData(imdb_data):
-    MovieView.ia.update(imdb_data, 'main')
-    MovieView.ia.update(imdb_data, 'plot')
-    MovieView.ia.update(imdb_data, 'critic reviews')
-    res = {}
-    try:
-        res['genres'] = imdb_data['genres']
-        res['plot'] = imdb_data['plot outline']
-        res['cover_url'] = imdb_data['cover url']
-        res['title'] = imdb_data['title']
-        res['runtimes'] = imdb_data['runtimes']
-        res['director'] = imdb_data['director'][0]['name']
-        res['rating'] = imdb_data['rating']
-        res['metascore'] = imdb_data['metascore']
-    except KeyError:
-        pass
-    return JsonResponse(res)
-
 class MovieView(View):
     ia = IMDb()
 
@@ -40,6 +22,7 @@ class MovieView(View):
             ### PARSE TITLES AND IDS ###
             titles = [rec.a.b.string for rec in bs.findAll('div', 'rec-title')]
             ids = [rec['data-tconst'] for rec in bs.findAll('div', 'rec_overview')]
+            # print 'got titles and ids'
 
             ### PARSE GENRES ###
             genres_htmls = [rec for rec in bs.findAll('div', 'rec-cert-genre')]
@@ -51,12 +34,18 @@ class MovieView(View):
                 else:
                     genres.append(g.string)
             genres = map(lambda g: string.strip(g), genres)
+            # print 'got genres'
 
             ### PARSE RATINGS ###
             ratings_htmls = [rec for rec in bs.findAll('div', 'rec-rating')]
             ratings = []
             for rr in ratings_htmls:
-                ratings.append(rr.find('span', 'rating-rating').span.string)
+                curr = rr.find('span', 'rating-rating')
+                if curr:
+                    ratings.append(curr.span.string)
+                else:
+                    ratings.append('-1')
+            # print 'got ratings'
 
             results = []
             for i, (title, movie_id, genre, rating) in enumerate(zip(titles, ids, genres, ratings)):
