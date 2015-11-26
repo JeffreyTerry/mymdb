@@ -378,7 +378,7 @@ function putMovieInSidebar(movie) {
          + '">IMDb: ' + movie.imdbRating + '</a>');
     $("#sb-plot").text(movie.Plot);
     $("#sb-photo").html('<img src="' + movie.Poster + '">');
-    loadYoutube(movie.Title);
+    loadYoutubeTrailer(movie.Title, movie.Year);
 }
 
 function expandMovieNode(id, successCallback) {
@@ -396,12 +396,10 @@ function expandMovieNode(id, successCallback) {
     if (!expandedNodes.has(id)) {
         expandedNodes.add(id);
         getRecommendationsFromImdb(id, function(err, movies) {
-            console.log(id, movies);
             movies = _.reject(movies, function(movie) {
                 return existingNodes.has(movie.id);
             });
             movies = _.sample(movies, 3);
-            console.log(movies);
             for (var i = 0; i < movies.length; ++i) {
                 // Add the recommended movies to the graph
                 var movie = movies[i];

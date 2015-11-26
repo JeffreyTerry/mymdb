@@ -33,26 +33,23 @@ function yt_init () {
 	});
 }
 
-function loadYoutube(title) {
-	var query = title.replace(" ", "+")+"trailer";
+function loadYoutubeTrailer(title, year) {
+	var query = title.replace(" ", "+") + "+" + year + "+official+trailer";
+	console.log(query);
+	if (gapi.client.youtube) {
+		var request = gapi.client.youtube.search.list({
+			part : "snippet",
+			type : "video", 
+			maxResults : 1,
+			order: "viewCount",
+			q: query
+		});
 
-	var request = gapi.client.youtube.search.list({
-		part : "snippet",
-		type : "video", 
-		maxResults : 1,
-		order: "viewCount",
-		q: query
-	});
-
-	request.execute(function (response) {
-		var item = response.result.items[0];
-
-		console.log(item.snippet.title);
-		console.log(item.id.videoId);
-
-		$("#video").html('<iframe id="video-player" type="text/html" src="http://www.youtube.com/embed/' + item.id.videoId + '" frameborder="0" allowfullscreen></iframe>');
-
-	});	
+		request.execute(function (response) {
+			var item = response.result.items[0];
+			$("#video").html('<iframe id="video-player" type="text/html" src="http://www.youtube.com/embed/' + item.id.videoId + '" frameborder="0" allowfullscreen></iframe>');
+		});
+	}
 }
 
 
