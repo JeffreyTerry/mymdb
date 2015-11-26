@@ -19,7 +19,10 @@ function nodeInnerFillFunction(d) {
 }
 
 function nodeOuterFillFunction(d) {
-    return shadeColor(nodeInnerFillFunction(d), 50);
+    if (d.rating > 7.5)
+        return shadeColor(nodeInnerFillFunction(d), 50);
+    else
+        return shadeColor(nodeInnerFillFunction(d), -30);
 }
 
 function mouseenter() {
