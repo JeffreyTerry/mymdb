@@ -55,9 +55,7 @@ function clickMovieNode(event) {
             $("#sb-title").text(title);
             showSidebarSpinner();
             activeMovieID = id;
-            console.log('there');
             getMovieFromImdb(id, function(err, movie) {
-                console.log(err, movie);
                 if (err) {
                     alert('Error: ', err);
                 } else if (movie.imdbID === activeMovieID) {
@@ -77,7 +75,6 @@ function clickMovieNode(event) {
 }
 
 function putMovieInSidebar(movie) {
-    console.log('here');
     $("#sb-title").text(movie.Title);
     $("#sb-director").text("By: " + movie.Director);
     $("#sb-metacritic-rating").html("Metacritic:&nbsp;" + movie.Metascore);
