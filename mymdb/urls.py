@@ -20,5 +20,6 @@ from mymdb import views
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^$', views.IndexView.as_view(), name='home'),
+    url(r'^movies/streaming/(?P<title>.*)$', views.StreamingView.as_view(), name='movie-streaming-view'),
     url(r'^movies/recommendations/(?P<id>.*)$', views.MovieView.as_view(), name='movie-recommendations-view')
 ]

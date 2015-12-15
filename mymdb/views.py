@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 from imdb import IMDb
 import requests
 import string
+from canistreamit import search, streaming
 
 
 class IndexView(TemplateView):
@@ -57,6 +58,24 @@ class MovieView(View):
             return JsonResponse(results, safe=False)
         except Exception as e:
             return JsonResponse({'err': 'could not parse recommendations from IMDb', 'exc': repr(e)})
+
+    def post(self, request, *args, **kwargs):
+        return HttpResponse('This is POST request')
+
+
+class StreamingView(View):
+    def get(self, request, *args, **kwargs):
+        title = kwargs['title']
+        results = search(title)
+        if results:
+            movie = results[0]
+            if movie['title'].lower() == title.lower():
+                is_streaming = streaming(movie['_id'])
+                if 'netflix_instant' in is_streaming:
+                    return JsonResponse({'netflix': True})
+            else:
+                return JsonResponse({'netflix': 'unknown'})
+        return JsonResponse({'netflix': False})
 
     def post(self, request, *args, **kwargs):
         return HttpResponse('This is POST request')

@@ -18,7 +18,6 @@ function expandMovieNode(id, successCallback) {
             if (err) {
                 console.log('Error: ', err);
             } else {
-                console.log(movies)
                 movies = _.reject(movies, function(movie) {
                     return existingNodes.has(movie.id);
                 });
@@ -56,6 +55,7 @@ function clickMovieNode(event) {
             $("#sb-title").text(title);
             showSidebarSpinner();
             activeMovieID = id;
+            console.log('there');
             getMovieFromImdb(id, function(err, movie) {
                 console.log(err, movie);
                 if (err) {
@@ -64,7 +64,9 @@ function clickMovieNode(event) {
                     hideSidebarSpinner();
                     putMovieInSidebar(movie);
                 }
-                $target.attr('clicked', 'false');
+                setTimeout(function() {
+                    $target.attr('clicked', 'false');
+                }, 500);
             });
         } else if ($target.attr('class') === 'secondary') {
             expandMovieNode(id, function() {
@@ -75,13 +77,27 @@ function clickMovieNode(event) {
 }
 
 function putMovieInSidebar(movie) {
+    console.log('here');
     $("#sb-title").text(movie.Title);
     $("#sb-director").text("By: " + movie.Director);
-    $("#sb-metacritic-rating").text("Metacritic: " + movie.Metascore);
+    $("#sb-metacritic-rating").html("Metacritic:&nbsp;" + movie.Metascore);
     $("#sb-imdb-rating").html('<a href="http://www.imdb.com/title/' + movie.imdbID
-         + '">IMDb: ' + movie.imdbRating + '</a>');
+         + '">IMDb:&nbsp;' + movie.imdbRating + '</a>');
     $("#sb-plot").text(movie.Plot);
     $("#sb-photo").html('<img src="' + movie.Poster + '">');
+    isStreamingOnNetflix(movie, function(result) {
+        var $netflix = $("#netflix-icon");
+        var src = $netflix.attr('src');
+        src = src.substring(0, src.lastIndexOf('_'));
+        if (result === false) {
+            $netflix.attr('src', src + '_no.png');
+        } else if (result === true) {
+            $netflix.attr('src', src + '_yes.png');
+        } else {
+            $netflix.attr('src', src + '_maybe.png');
+        }
+        $("#sb-netflix").css({'display': 'block'});
+    });
     loadYoutubeTrailer(movie.Title, movie.Year);
 }
 
@@ -92,6 +108,7 @@ function clearSidebar() {
     $("#sb-imdb-rating").text('');
     $("#sb-plot").text('');
     $("#sb-photo").html('');
+    $("#sb-netflix").css({'display': 'none'});
     $("#video").html('');
 }
 
@@ -101,6 +118,20 @@ function showSidebarSpinner() {
 
 function hideSidebarSpinner() {
     $("#sb-loader-container").css('display', 'none');
+}
+
+function initializeVideoToggle() {
+    $("#toggle-video-button").click(function() {
+        if ($("#sb-trailer > #video").height() == 0) {
+            $("#sb-trailer").animate({'height': '260px'});
+            $("#sb-trailer > #video").animate({'height': '100%'});
+        } else {
+            $("#sb-trailer").animate({'height': '40px'});
+            $("#sb-trailer > #video").animate({'height': '0'});
+        }
+        $("#toggle-video-button > #toggle-up").toggleClass('nodisplay');
+        $("#toggle-video-button > #toggle-down").toggleClass('nodisplay');
+    });
 }
 
 function initializeInitialInputBox() {
@@ -124,4 +155,5 @@ function initializeInitialInputBox() {
     });
 }
 
+initializeVideoToggle();
 initializeInitialInputBox();

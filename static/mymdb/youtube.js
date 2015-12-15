@@ -47,6 +47,7 @@ function loadYoutubeTrailer(title, year) {
 		request.execute(function (response) {
 			var item = response.result.items[0];
 			$("#video").html('<iframe id="video-player" type="text/html" src="http://www.youtube.com/embed/' + item.id.videoId + '" frameborder="0" allowfullscreen></iframe>');
+			$("#sb-trailer").css('display', 'block');
 		});
 	}
 }

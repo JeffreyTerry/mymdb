@@ -1,4 +1,3 @@
-
 function getMovieFromImdb(id, callback) {
     if (movieCache.hasOwnProperty(id) && movieCache[id].hasOwnProperty('movie')) {
         if (callback)
@@ -20,7 +19,7 @@ function getMovieFromImdb(id, callback) {
 }
 
 // This function should only be used when we need to search for a movie based on a user query.
-// Its result is often counterintuitive.
+// Its result is inexact.
 function getMovieFromIMDbByTitle(titleQuery, callback) {
     omdb.get({title: titleQuery, type: 'movie'}, function(err, data) {
         if (err) {
