@@ -57,7 +57,7 @@ db.sqlite3
 
 # Library packages
 bower_components
-static
+/static
 
 # Virtual environment
 dsenv
