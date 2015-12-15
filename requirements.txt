@@ -1,5 +1,4 @@
-CanIStreamIt==0.2
-Django==1.8.3
-IMDbPY==5.0
-beautifulsoup4==4.4.1
-lxml==3.4.4
+CanIStreamIt>=0.2
+Django>=1.8.3
+IMDbPY>=5.0
+
