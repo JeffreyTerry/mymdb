@@ -25,9 +25,6 @@
 
     <!-- OMDb API -->
     <script type="text/javascript" src="{% static "omdb-client/dist/omdb-client.min.js" %}"></script>
-
-    <!-- miscellaneous -->
-    <link rel="stylesheet" href="http://css-spinners.com/css/spinner/spinner.css" type="text/css">
 </head>
 
 <body>
@@ -39,7 +36,7 @@
 <div id="sidebar">
     <input class="form-control" type="text" id="initial-input-box" placeholder="What movie are you feeling?" autofocus="true"\>
     <div id="sb-loader-container">
-        <div class="spinner-loader">
+        <div class="loader">
             Loading…
         </div>
     </div>
@@ -84,5 +81,6 @@
 
 
 <link rel="stylesheet" type="text/css" href="{% static "mymdb/index.css" %}">
+<link rel="stylesheet" type="text/css" href="{% static "mymdb/loader.css" %}">
 
 </html>
