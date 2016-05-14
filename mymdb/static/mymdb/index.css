@@ -164,7 +164,7 @@ text {
 
 #sb-loader-container {
     position: absolute;
-    left: calc(50% - 26px);
-    top: calc(50% - 20px);
+    left: calc(50% - 70px);
+    top: calc(50% - 150px);
     display: none;
 }
