@@ -5,17 +5,12 @@ function getMovieFromImdb(id, callback) {
         if (callback)
             callback(null, movieCache[id]['movie']);
     } else {
-        omdb.get({id: id}, function(err, data) {
-            if (err) { 
+        theMovieDb.find.getById({'id': id, 'external_source': 'imdb_id'}, function(data) {
+            var top_result = JSON.parse(data).movie_results[0];
+            getMovieFromIMDbByTheMovieDbId(top_result.id, callback);
+        }, function(err) {
+            if (callback)
                 callback(err);
-            } else {
-                if (!movieCache.hasOwnProperty(data.imdbID)) {
-                    movieCache[data.imdbID] = {};
-                }
-                movieCache[data.imdbID]['movie'] = data;
-                if (callback)
-                    callback(null, data);
-            }
         });
     }
 }
@@ -24,54 +19,58 @@ function getMovieFromImdb(id, callback) {
 // Its result is inexact.
 function getMovieFromIMDbByTitle(titleQuery, callback) {
     theMovieDb.search.getMovie({"query": encodeURI(titleQuery), 'append_to_response': 'external_ids'}, function(data) {
-        top_result = JSON.parse(data).results[0];
-        theMovieDb.movies.getById({'id': top_result.id}, function(raw_movie_data) {
-            raw_movie_data = JSON.parse(raw_movie_data);
-            theMovieDb.movies.getCredits({'id': top_result.id}, function(credits_data) {
-                credits_data = JSON.parse(credits_data);
-                theMovieDb.movies.getTrailers({'id': top_result.id}, function(list_of_trailers) {
-                    list_of_trailers = JSON.parse(list_of_trailers);
-                    if (!list_of_trailers.results) {
-                        list_of_trailers.results = [''];
+        var top_result = JSON.parse(data).results[0];
+        getMovieFromIMDbByTheMovieDbId(top_result.id, callback);
+    }, function(err) {
+        if (callback)
+            callback(err);
+    });
+}
+
+function getMovieFromIMDbByTheMovieDbId(tmdbId, callback) {
+    theMovieDb.movies.getById({'id': tmdbId}, function(raw_movie_data) {
+        raw_movie_data = JSON.parse(raw_movie_data);
+        theMovieDb.movies.getCredits({'id': tmdbId}, function(credits_data) {
+            credits_data = JSON.parse(credits_data);
+            theMovieDb.movies.getTrailers({'id': tmdbId}, function(list_of_trailers) {
+                list_of_trailers = JSON.parse(list_of_trailers);
+                if (!list_of_trailers.results) {
+                    list_of_trailers.results = [''];
+                }
+
+                // Create our movie object
+                var movie = {};
+                movie.Title = raw_movie_data.title;
+                movie.Director = credits_data.crew.find(function(element) {
+                    if (element.job == 'Director')
+                        return true;
+                }).name;
+                movie.Metascore = 'TODO';
+                movie.imdbRating = raw_movie_data.vote_average;
+                movie.Plot = raw_movie_data.overview;
+                movie.Year = raw_movie_data.release_date.substring(0, 4);
+                movie.imdbID = raw_movie_data.imdb_id;
+                movie.Genres = raw_movie_data.genres;
+                movie.Trailer = list_of_trailers.youtube.find(function(element) {
+                    if (element.type == 'Trailer')
+                        return true;
+                }).source;
+
+                getPosterURLBase(function(base_url) {
+                    movie.Poster = base_url + raw_movie_data.poster_path;
+                    // Do cache magic
+                    if (!movieCache.hasOwnProperty(movie.imdbID)) {
+                        movieCache[movie.imdbID] = {};
                     }
-
-                    // Create our movie object
-                    var movie = {};
-                    movie.Title = raw_movie_data.title;
-                    movie.Director = credits_data.crew.find(function(element) {
-                        if (element.job == 'Director')
-                            return true;
-                    }).name;
-                    movie.Metascore = 'TODO';
-                    movie.imdbRating = raw_movie_data.vote_average;
-                    movie.Plot = raw_movie_data.overview;
-                    movie.Year = raw_movie_data.release_date.substring(0, 4);
-                    movie.imdbID = raw_movie_data.imdb_id;
-                    movie.Genres = raw_movie_data.genres;
-                    movie.Trailer = list_of_trailers.youtube.find(function(element) {
-                        if (element.type == 'Trailer')
-                            return true;
-                    }).source;
-
-                    getPosterURLBase(function(base_url) {
-                        movie.Poster = base_url + raw_movie_data.poster_path;
-                        // Do cache magic
-                        if (!movieCache.hasOwnProperty(movie.imdbID)) {
-                            movieCache[movie.imdbID] = {};
-                        }
-                        movieCache[movie.imdbID]['movie'] = movie;
-                        if (callback)
-                            callback(null, movie);
-                    });
-                }, function (err) {
+                    movieCache[movie.imdbID]['movie'] = movie;
                     if (callback)
-                        callback(err);
+                        callback(null, movie);
                 });
             }, function (err) {
                 if (callback)
                     callback(err);
             });
-        }, function(err) {
+        }, function (err) {
             if (callback)
                 callback(err);
         });

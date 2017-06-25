@@ -70,6 +70,9 @@
 </body>
 
 <!-- The inclusion order matters for these scripts -->
+<script>
+    var STATIC_URL_BASE = "{% static "" %}";
+</script>
 <script src="{% static "mymdb/youtube.js" %}" type="text/javascript"></script>
 <script src="{% static "mymdb/graph.js" %}" type="text/javascript"></script>
 <script src="{% static "mymdb/imdb.js" %}" type="text/javascript"></script>
