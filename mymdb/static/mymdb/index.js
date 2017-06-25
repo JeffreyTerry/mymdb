@@ -45,6 +45,9 @@ function expandMovieNode(id, successCallback) {
 
 var activeMovieID = '';
 function clickMovieNode(event) {
+    // Hide 'Click Here' Icon
+    $('#click_here_icon').remove();
+
     var $target = $(event.target);
     if ($target.attr('clicked') !== 'true') {
         $target.attr('clicked', 'true');
