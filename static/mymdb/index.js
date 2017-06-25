@@ -56,14 +56,15 @@ function clickMovieNode(event) {
             showSidebarSpinner();
             activeMovieID = id;
             getMovieFromImdb(id, function(err, movie) {
-                console.log(err, movie);
                 if (err) {
                     alert('Error: ', err);
                 } else if (movie.imdbID === activeMovieID) {
                     hideSidebarSpinner();
                     putMovieInSidebar(movie);
                 }
-                $target.attr('clicked', 'false');
+                setTimeout(function() {
+                    $target.attr('clicked', 'false');
+                }, 500);
             });
         } else if ($target.attr('class') === 'secondary') {
             expandMovieNode(id, function() {
@@ -81,19 +82,18 @@ function putMovieInSidebar(movie) {
          + '">IMDb:&nbsp;' + movie.imdbRating + '</a>');
     $("#sb-plot").text(movie.Plot);
     $("#sb-photo").html('<img src="' + movie.Poster + '">');
-    $("#sb-netflix").css({'display': 'none'});
-    $.get('/movies/streaming/' + htmlEncoded(movie.Title), function(data) {
+    isStreamingOnNetflix(movie, function(result) {
         var $netflix = $("#netflix-icon");
         var src = $netflix.attr('src');
         src = src.substring(0, src.lastIndexOf('_'));
-        if (data.netflix == 'false') {
-            console.log('year');
+        if (result === false) {
             $netflix.attr('src', src + '_no.png');
-            $("#sb-netflix").css({'display': 'block'});
-        } else if (data.netflix == 'true') {
+        } else if (result === true) {
             $netflix.attr('src', src + '_yes.png');
-            $("#sb-netflix").css({'display': 'block'});
+        } else {
+            $netflix.attr('src', src + '_maybe.png');
         }
+        $("#sb-netflix").css({'display': 'block'});
     });
     loadYoutubeTrailer(movie.Title, movie.Year);
 }
@@ -105,6 +105,7 @@ function clearSidebar() {
     $("#sb-imdb-rating").text('');
     $("#sb-plot").text('');
     $("#sb-photo").html('');
+    $("#sb-netflix").css({'display': 'none'});
     $("#video").html('');
 }
 
@@ -143,6 +144,7 @@ function initializeInitialInputBox() {
                 } else {
                     $("#initial-input-box").remove();
                 }
+                console.log(movie);
                 graph.addNode(movie.Title, movie.imdbID, movie.Genre.split(', ')[0], movie.imdbRating);
                 expandMovieNode(movie.imdbID);
                 putMovieInSidebar(movie);
