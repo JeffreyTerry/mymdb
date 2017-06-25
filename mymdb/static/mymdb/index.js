@@ -95,7 +95,11 @@ function putMovieInSidebar(movie) {
         }
         $("#sb-netflix").css({'display': 'block'});
     });
-    loadYoutubeTrailer(movie.Title, movie.Year);
+    if (movie.Trailer) {
+        loadYoutubeTrailer({'id': movie.Trailer});
+    } else {
+        loadYoutubeTrailer({'title': movie.Title, 'year': movie.Year});
+    }
 }
 
 function clearSidebar() {
@@ -144,7 +148,7 @@ function initializeInitialInputBox() {
                 } else {
                     $("#initial-input-box").remove();
                 }
-                graph.addNode(movie.Title, movie.imdbID, movie.Genre.split(', ')[0], movie.imdbRating);
+                graph.addNode(movie.Title, movie.imdbID, movie.Genres[0], movie.imdbRating);
                 expandMovieNode(movie.imdbID);
                 putMovieInSidebar(movie);
             });

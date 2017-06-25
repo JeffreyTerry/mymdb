@@ -1,9 +1,9 @@
 {
   "name": "mymdb",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "dependencies": {
-    "omdb-client": "~1.0.6",
-    "colorbrewer": "~1.0.0"
+    "colorbrewer": "~1.0.0",
+    "themoviedb-javascript-library": "cavestri/themoviedb-javascript-library#~1.0.1"
   },
   "private": true
 }

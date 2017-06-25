@@ -33,9 +33,16 @@ function yt_init () {
 	});
 }
 
-function loadYoutubeTrailer(title, year) {
-	var query = title.replace(" ", "+") + "+" + year + "+official+trailer";
+// There's a weird bug here. I have to make a query even if I have the video id I want. Otherwise the iframe doesn't work.
+function loadYoutubeTrailer(options) {
+	var title = 'video';
+	var year = '0000'
+	if (options.title && options.year) {
+		title = options.title;
+		year = options.year;
+	}
 	if (gapi.client.youtube) {
+		var query = title.replace(" ", "+") + "+" + year + "+official+trailer";
 		var request = gapi.client.youtube.search.list({
 			part : "snippet",
 			type : "video", 
@@ -46,13 +53,19 @@ function loadYoutubeTrailer(title, year) {
 
 		request.execute(function (response) {
 			var item = response.result.items[0];
-			$("#video").html('<iframe id="video-player" type="text/html" src="http://www.youtube.com/embed/' + item.id.videoId + '" frameborder="0" allowfullscreen></iframe>');
-			$("#sb-trailer").css('display', 'block');
+			if (options.id) {
+				populateVideoFrame(options.id);
+			} else {
+				populateVideoFrame(item.id.videoId);
+			}
 		});
 	}
 }
 
-
+function populateVideoFrame(youtube_id) {
+	$("#video").html('<iframe id="video-player" type="text/html" src="http://www.youtube.com/embed/' + youtube_id + '" frameborder="0" allowfullscreen></iframe>');
+	$("#sb-trailer").css('display', 'block');
+}
 
 
 
