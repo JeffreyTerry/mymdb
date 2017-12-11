@@ -30,7 +30,7 @@ function mouseenter() {
     // Show 'Click Here' Icon
     var x_position = $(this)[0].transform.animVal[0].matrix['e'] + 20;
     var y_position = $(this)[0].transform.animVal[0].matrix['f'] - 18;
-    var clickHereDiv = $('<img id="click_here_icon" src=' + STATIC_URL_BASE + '/mymdb/images/click_here.png height=40 width=200 style="position: absolute; top: ' + y_position + 'px; left: ' + x_position + 'px;">')
+    var clickHereDiv = $('<img id="click_here_icon" src=' + STATIC_URL_BASE + '/mymdb/images/click_here.png height=40 width=294 style="position: absolute; top: ' + y_position + 'px; left: ' + x_position + 'px;">')
     $('body').append(clickHereDiv);
 
     // If we haven't already appended the outer circle
