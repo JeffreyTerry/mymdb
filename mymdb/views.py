@@ -18,7 +18,7 @@ class MovieView(View):
     def get(self, request, *args, **kwargs):
         try:
             src = requests.get('http://www.imdb.com/title/' + kwargs['id'] + '/').text
-            bs = BeautifulSoup(src, 'lxml')
+            bs = BeautifulSoup(src, 'html.parser')
 
             ### PARSE TITLES AND IDS ###
             titles = [rec.a.b.string for rec in bs.findAll('div', 'rec-title')]
