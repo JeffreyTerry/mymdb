@@ -60,5 +60,6 @@ bower_components
 /static
 
 # Virtual environment
+env
 dsenv
 mymdbenv
