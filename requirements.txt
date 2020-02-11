@@ -3,7 +3,7 @@ bs4==0.0.1
 CanIStreamIt==0.2
 certifi==2019.6.16
 chardet==3.0.4
-Django==2.2.4
+Django==2.2.10
 idna==2.8
 IMDbPY==6.8
 lxml==4.4.1
